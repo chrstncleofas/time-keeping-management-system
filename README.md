@@ -1,118 +1,104 @@
 # Time Keeping Management System (TKMS)
 
-A comprehensive time keeping management system with camera capture capabilities, built with Next.js, TypeScript, and MongoDB.
+TKMS is a production-ready time keeping and HR-adjacent platform built with Next.js (App Router), TypeScript, MongoDB and Tailwind CSS. It supports camera capture for time-in/time-out, branding and theming, admin management, and extensible HR features.
 
-## Features
+## What’s new (expanded)
+- System-wide branding and theme configuration (admin Settings) with server-side CSS variable injection for zero-flash theming
+- File uploads (logo, favicon, other branding) with AWS S3 integration and local fallback
+- Admin UI for System Settings, including color pickers, preview and live CSS var application
+- Login page theming (auth card background, auth backdrop) with tokenized footer text
+- Global Tailwind → CSS variable mappings to support white-labeling without refactoring all components
+- Improved API patterns, RBAC middleware (`requireAuth` / `requireAdmin`) and audited settings changes
 
-- 📸 **Camera Capture** - Real-time photo capture during time in/out
-- 👤 **Employee Management** - Track employee attendance and hours
-- 📅 **Schedule Management** - Admin can set flexible schedules (days and time)
-- 📊 **Dashboard Analytics** - View attendance reports and statistics
-- 📱 **Mobile Responsive** - Works seamlessly on all devices
-- 🔐 **Secure Authentication** - JWT-based authentication system
-- ⏰ **Real-time Updates** - Live time tracking
+## Key Features
+- Camera capture for clock-in/out
+- Employee and admin dashboards with attendance analytics
+- Schedules, time entries, and manual adjustments with audit logs
+- System Settings (branding, colors, logos, favicon, footer) with SSR-first application
+- File uploads (S3/local) with authorization for admin uploads
+- Hooks and React Query v5 powered data fetching
 
-## Tech Stack
+## Quick Start
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Backend**: Next.js API Routes
-- **Database**: MongoDB with Mongoose ORM
-- **Authentication**: NextAuth.js with JWT
-- **Styling**: Tailwind CSS
-- **Camera**: react-webcam
-- **State Management**: Zustand
-- **Form Handling**: React Hook Form + Zod
+Prerequisites
+- Node.js 18+
+- pnpm
+- MongoDB (local or Atlas)
+- Optional: AWS S3 bucket for uploads
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- MongoDB installed and running locally or MongoDB Atlas account
-
-### Installation
-
-1. Install dependencies:
+Install
 ```bash
 pnpm install
 ```
 
-2. Configure environment variables:
-   - Copy `.env.local` and update with your MongoDB connection string
-   - Update JWT secrets for production
+Setup env
+- Copy `.env.local.example` to `.env.local` (or edit `.env.local`) and set the values. Important vars used by the app:
 
-3. Start MongoDB (if running locally):
+- `MONGODB_URI` — MongoDB connection string
+- `JWT_SECRET` — server JWT secret
+- `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_LOGO`, `NEXT_PUBLIC_APP_FAVICON` — branding fallbacks
+- `AWS_REGION`, `AWS_S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` — optional S3 uploads
+
+Run
 ```bash
-mongod
+pnpm dev
 ```
 
-4. Run the development server:
-```bash
-pnpm run dev
-```
+Open http://localhost:3000
 
-5. Open [http://localhost:3000](http://localhost:3000)
+Developer commands
+- `pnpm run dev` — dev server
+- `pnpm run build` — production build
+- `pnpm run start` — start production server
+- `pnpm run lint` — linter
+- `pnpm run type-check` — TypeScript checks
 
-## Default Credentials
+## System Settings (Admin)
+- Accessible at `/admin/settings` for super-admins
+- Configure branding: `primaryColor`, `accentColor`, `sidebarBg`, `authCardBg`, `authBackdropBg`, `footerText`, `logoUrl`, `faviconUrl`, etc.
+- Settings are injected into server-rendered markup (`:root` CSS variables) for first-paint theming and reapplied client-side on hydration by `Providers`.
 
-### Admin Account
-- Email: admin@tkms.com
-- Password: admin123
+Notes about footer text
+- `footerText` accepts tokens `{year}` and `{company}` which are replaced on public pages (e.g., login).
 
-### Employee Account
-- Email: employee@tkms.com
-- Password: employee123
+## Uploads
+- Admin uploads (logo/favicons) use `POST /api/uploads` and require admin auth. Files are stored in S3 (if configured) or `public/uploads` fallback.
 
-## Project Structure
+## Important Code Paths
+- `src/app/layout.tsx` — server-side fetch + CSS var injection
+- `src/app/Providers.tsx` — client-side application of settings, favicon and CSS var fallbacks
+- `src/app/admin/settings/page.tsx` — admin UI for settings
+- `src/app/auth/login/page.tsx` — public login that uses CSS vars and `footerText` token replacement
+- `src/server/controllers/systemSettingsController.ts` — settings GET/PATCH
+- `src/lib/models/SystemSettings.ts` — system settings schema
 
-```
-tkms/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── admin/             # Admin dashboard pages
-│   │   ├── employee/          # Employee pages
-│   │   ├── api/               # API routes
-│   │   └── auth/              # Authentication pages
-│   ├── components/            # React components
-│   │   ├── admin/            # Admin components
-│   │   ├── employee/         # Employee components
-│   │   ├── shared/           # Shared components
-│   │   └── ui/               # UI components
-│   ├── lib/                  # Utility functions
-│   │   ├── db/              # Database connection
-│   │   ├── models/          # Mongoose models
-│   │   └── utils/           # Helper functions
-│   ├── hooks/               # Custom React hooks
-│   ├── stores/              # Zustand stores
-│   └── types/               # TypeScript types
-├── public/                  # Static assets
-└── package.json
+## Data & Extensibility (HR)
+TKMS is ready to extend with HR capabilities (employee profiles, leave policies, payroll export, training). Recommended next modules:
 
-```
+1. Employee Profiles (personal, emergency contact, documents)
+2. Leave policies and accruals with approvals
+3. Payroll export / connectors
 
-## Features Overview
+If you want, I can scaffold the first model + API and an admin UI for Employee Profiles.
 
-### For Employees
-- Clock in/out with camera capture
-- View personal attendance history
-- View assigned schedule
-- View hours worked
+## Security & Roles
+- JWT-based auth with middleware helpers in `src/lib/middleware/auth.ts`
+- `requireAdmin` and `requireAuth` protect API routes; settings PATCH is restricted to `super-admin` role.
 
-### For Admins
-- Manage employee accounts
-- Set and modify schedules
-- View all employee attendance
-- Generate reports
-- Approve/reject time entries
-- Monitor real-time attendance
+## Contributing
+- Use branches and open PRs for feature work
+- Keep UI changes accessible and prefer CSS variables for theming
+- Run `pnpm run lint` and `pnpm run type-check` before opening PRs
 
-## Development
+## Troubleshooting
+- If branding doesn’t apply immediately, hard-refresh the page (favicon uses cache-busting)
+- If uploads return 401: ensure the request includes an `Authorization: Bearer <token>` header (admin-only endpoint)
 
-- `pnpm run dev` - Start development server
-- `pnpm run build` - Build for production
-- `pnpm run start` - Start production server
-- `pnpm run lint` - Run ESLint
-- `pnpm run type-check` - Type checking
 ## License
+Private — All rights reserved
 
-Private - All Rights Reserved
+---
+If you want, I can also:
+- Add a short architecture diagram or sequence flow for theming on first paint
+- Generate a `README.dev.md` with developer setup and debugging tips
+
