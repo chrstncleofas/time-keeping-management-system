@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  
+  :root {
+    --primary-color: #2563eb;
+    --accent-color: #7c3aed;
+    --sidebar-bg: #0f1724;
+    --sidebar-text: #e6eef8;
+    --sidebar-active-bg: #2563eb;
+    --sidebar-hover-bg: #0b1220;
+    --button-bg: #7c3aed;
+    --button-text: #ffffff;
+    --header-bg: #ffffff;
+    --header-text: #111827;
+    --auth-card-bg: #0b1220;
+    --card-bg: #ffffff;
+    --success-color: #16a34a;
+    --danger-color: #dc2626;
+    --warning-color: #f59e0b;
+    --info-color: var(--primary-color);
+  }
+
+  body {
+    background-color: var(--header-bg);
+    color: var(--header-text);
+  }
+
+  /* Gradient text utility */
+  .text-gradient {
+    @apply bg-gradient-ibaytech bg-clip-text text-transparent;
+  }
+
+  /* Dark gradient background */
+  .bg-dark-gradient {
+    background: linear-gradient(135deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.06) 100%);
+  }
+
+  /* Fix input text color - ensure it's visible */
+  input, 
+  textarea, 
+  select {
+    @apply text-gray-900;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-gray-400;
+  }
+
+  /* Disabled inputs */
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    @apply bg-gray-100 text-gray-500 cursor-not-allowed;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  /* Button variants */
+  .btn-primary {
+    @apply px-4 py-2 font-medium rounded-lg transition-colors;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+  }
+
+  /* Map common Tailwind color utilities to CSS variables so saved settings apply globally */
+  .bg-blue-600 { background-color: var(--primary-color) !important; }
+  .hover\:bg-blue-700:hover { background-color: var(--primary-color-dark) !important; }
+  .text-primary-600, .text-primary-700 { color: var(--primary-color) !important; }
+
+  /* Border utilities for primary */
+  .border-blue-600, .border-primary-600 { border-color: var(--primary-color) !important; }
+
+  /* Light primary background (used for badges/tags) */
+  .bg-primary-50 { background-color: color-mix(in srgb, var(--primary-color) 6%, white) !important; }
+  .bg-blue-50 { background-color: color-mix(in srgb, var(--primary-color) 6%, white) !important; }
+
+  /* Success / danger / warning light backgrounds used for badges and alerts */
+  .bg-green-50, .bg-green-100 { background-color: color-mix(in srgb, var(--success-color) 8%, white) !important; }
+  .bg-red-50, .bg-red-100 { background-color: color-mix(in srgb, var(--danger-color) 8%, white) !important; }
+  .bg-yellow-50, .bg-orange-50 { background-color: color-mix(in srgb, var(--warning-color) 8%, white) !important; }
+  .bg-blue-100 { background-color: color-mix(in srgb, var(--primary-color) 10%, white) !important; }
+  .bg-red-500 { background-color: var(--danger-color) !important; }
+
+  /* Text color mappings for semantic utilities */
+  .text-blue-600, .text-blue-700 { color: var(--primary-color) !important; }
+  .text-green-600 { color: var(--success-color) !important; }
+  .text-red-600, .text-red-700 { color: var(--danger-color) !important; }
+  .text-yellow-700, .text-orange-700 { color: var(--warning-color) !important; }
+
+  /* Border light variants */
+  .border-blue-200 { border-color: color-mix(in srgb, var(--primary-color) 12%, white) !important; }
+  .border-green-200 { border-color: color-mix(in srgb, var(--success-color) 12%, white) !important; }
+  .border-red-200 { border-color: color-mix(in srgb, var(--danger-color) 12%, white) !important; }
+
+  /* Focus ring mapping for inputs/buttons */
+  .focus\:ring-primary-500:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent) !important; }
+  .focus\:ring-blue-500:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent) !important; }
+
+  .bg-accent-500 { background-color: var(--accent-color) !important; }
+  .hover\:bg-accent-600:hover { background-color: var(--accent-color-dark) !important; }
+
+  .bg-green-600 { background-color: var(--success-color) !important; }
+  .hover\:bg-green-700:hover { background-color: var(--success-color-dark) !important; }
+
+  .bg-red-600 { background-color: var(--danger-color) !important; }
+  .hover\:bg-red-700:hover { background-color: var(--danger-color-dark) !important; }
+
+  /* Dark theme helper classes used across the app */
+  .bg-dark-800 { background-color: var(--sidebar-bg) !important; }
+  .bg-dark-700 { background-color: color-mix(in srgb, var(--sidebar-bg) 80%, rgba(255,255,255,0.02)) !important; }
+  .border-dark-700 { border-color: rgba(255,255,255,0.04) !important; }
+  .text-primary-500 { color: var(--primary-color) !important; }
+
+  /* Make card backgrounds configurable via --card-bg */
+  .bg-white { background-color: var(--card-bg) !important; }
+  .bg-gray-50 { background-color: var(--header-bg) !important; }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:bg-red-300 disabled:text-red-100 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 font-medium rounded-lg transition-colors;
+    background-color: rgba(0,0,0,0.04);
+    color: var(--header-text);
+  }
+
+  /* Hover text mappings so hover text color follows the primary theme color */
+  .hover\:text-gray-300:hover,
+  .hover\:text-gray-400:hover,
+  .hover\:text-gray-500:hover,
+  .hover\:text-gray-600:hover,
+  .hover\:text-gray-900:hover,
+  .hover\:text-gray-200:hover,
+  .hover\:text-gray-700:hover,
+  .hover\:text-primary-700:hover,
+  .hover\:text-blue-700:hover {
+    color: var(--primary-color) !important;
+  }
+
+  .btn-disabled {
+    @apply px-4 py-2 bg-red-300 text-red-100 font-medium rounded-lg cursor-not-allowed;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom scrollbar for dark theme */
+  .scrollbar-dark::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar-track {
+    background-color: var(--sidebar-bg);
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.08);
+    border-radius: 9999px;
+  }
+  
+  .scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    @apply bg-dark-500;
+  }
+}
