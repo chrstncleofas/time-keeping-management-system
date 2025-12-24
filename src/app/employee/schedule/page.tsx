@@ -304,8 +304,6 @@ export default function EmployeeSchedulePage() {
           <DtrDownloadButton
             employeeName={`${user?.firstName || ''} ${user?.lastName || ''}`}
             employeeId={user?._id}
-            position={user?.position || ''}
-            department={user?.department || ''}
             attendanceRecords={attendanceRecords}
             periodStart={new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)}
             periodEnd={new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)}

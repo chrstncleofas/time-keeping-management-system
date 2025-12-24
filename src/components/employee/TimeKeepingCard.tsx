@@ -24,6 +24,7 @@ export const TimeKeepingCard: React.FC = () => {
   const [clockType, setClockType] = useState<'time-in' | 'time-out'>('time-in');
   const [loading, setLoading] = useState(false);
   const [todayStatus, setTodayStatus] = useState<any>(null);
+  const [recentEntries, setRecentEntries] = useState<any[]>([]);
   const [currentTime, setCurrentTime] = useState(getPhilippineTime());
   const [schedule, setSchedule] = useState<any>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -39,7 +40,23 @@ export const TimeKeepingCard: React.FC = () => {
   useEffect(() => {
     fetchTodayStatus();
     fetchSchedule();
+    fetchRecentEntries();
   }, []);
+
+  const fetchRecentEntries = async () => {
+    try {
+      const res = await apiClient.getTimeEntries(user?._id);
+      if (res && res.success && Array.isArray(res.timeEntries)) {
+        // sort descending by timestamp
+        const sorted = res.timeEntries.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setRecentEntries(sorted.slice(0, 8));
+      } else {
+        setRecentEntries([]);
+      }
+    } catch (err) {
+      setRecentEntries([]);
+    }
+  };
 
   const fetchTodayStatus = async () => {
     try {
@@ -121,6 +138,7 @@ export const TimeKeepingCard: React.FC = () => {
       // Refresh today's status from API
       setTimeout(() => {
         fetchTodayStatus();
+        fetchRecentEntries();
       }, 500);
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'An error occurred';
@@ -219,17 +237,11 @@ export const TimeKeepingCard: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      {todayStatus.lunchBreakMinutes > 0 && (
-                        <p className="text-xs text-purple-600 mt-2">
-                          * DOLE compliant: Automatic lunch break deduction applied
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>
               </div>
             )}
-
             {/* Action Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <button
@@ -260,52 +272,62 @@ export const TimeKeepingCard: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Compact Time In / Time Out cards */}
-          <div className="md:col-span-1 flex flex-col gap-3">
-            {/* Time In Card */}
-            <div className="bg-white border rounded-lg p-3 flex items-center gap-3">
-              <div className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                {hasTimedIn ? (
-                  <img
-                    src={
-                      todayStatus.timeIn?.photo || todayStatus.timeIn?.image || todayStatus.timeIn?.capture || todayStatus.timeIn?.photoBase64 || ''
-                    }
-                    alt="Time In"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <Camera className="w-6 h-6 text-gray-400" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="text-xs text-gray-500">Time In</div>
-                <div className="text-sm font-semibold text-gray-800">{hasTimedIn ? formatTime(todayStatus.timeIn.timestamp) : '-'}</div>
-                <div className="text-xs text-gray-500">{hasTimedIn ? new Date(todayStatus.timeIn.timestamp).toLocaleDateString() : ''}</div>
-              </div>
-            </div>
+          {/* Right: Combined vertical list with today's entries first then recent entries */}
+          <div className="md:col-span-1">
+            <div className="space-y-2 max-h-96 overflow-auto">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Recent Entries</h4>
+              {/* build combined list: today's time-in/out first */}
+              {(() => {
+                const combined: any[] = [];
+                if (hasTimedIn) combined.push({
+                  _id: todayStatus.timeIn._id || `today-timein`,
+                  type: 'time-in',
+                  timestamp: todayStatus.timeIn.timestamp,
+                  photoUrl: todayStatus.timeIn.photoUrl || todayStatus.timeIn.photo || todayStatus.timeIn.image || todayStatus.timeIn.capture || todayStatus.timeIn.photoBase64,
+                });
+                if (hasTimedOut) combined.push({
+                  _id: todayStatus.timeOut._id || `today-timeout`,
+                  type: 'time-out',
+                  timestamp: todayStatus.timeOut.timestamp,
+                  photoUrl: todayStatus.timeOut.photoUrl || todayStatus.timeOut.photo || todayStatus.timeOut.image || todayStatus.timeOut.capture || todayStatus.timeOut.photoBase64,
+                });
 
-            {/* Time Out Card */}
-            <div className="bg-white border rounded-lg p-3 flex items-center gap-3">
-              <div className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                {hasTimedOut ? (
-                  <img
-                    src={
-                      todayStatus.timeOut?.photo || todayStatus.timeOut?.image || todayStatus.timeOut?.capture || todayStatus.timeOut?.photoBase64 || ''
-                    }
-                    alt="Time Out"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <Camera className="w-6 h-6 text-gray-400" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="text-xs text-gray-500">Time Out</div>
-                <div className="text-sm font-semibold text-gray-800">{hasTimedOut ? formatTime(todayStatus.timeOut.timestamp) : '-'}</div>
-                <div className="text-xs text-gray-500">{hasTimedOut ? new Date(todayStatus.timeOut.timestamp).toLocaleDateString() : ''}</div>
-              </div>
+                // append recent entries but avoid duplicates by timestamp
+                const seen = new Set(combined.map((c) => new Date(c.timestamp).getTime()));
+                for (const e of recentEntries) {
+                  const t = e.timestamp ? new Date(e.timestamp).getTime() : null;
+                  if (t && !seen.has(t)) {
+                    combined.push(e);
+                    seen.add(t);
+                  }
+                }
+
+                if (combined.length === 0) {
+                  return <div className="text-sm text-gray-500">No recent entries</div>;
+                }
+
+                return combined.map((entry) => (
+                  <div key={entry._id || entry.id || entry.timestamp} className="bg-white border rounded-lg p-2 flex items-center gap-3 mb-2">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                      {entry.photoUrl || entry.photo || entry.image || entry.capture || entry.photoBase64 ? (
+                        <img
+                          src={entry.photoUrl || entry.photo || entry.image || entry.capture || entry.photoBase64}
+                          alt="entry"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      ) : (
+                        <Camera className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-500">{entry.type === 'time-in' ? 'Clock In' : 'Clock Out'}</div>
+                      <div className="text-sm font-semibold text-gray-800">{entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '-'}</div>
+                      <div className="text-xs text-gray-500">{entry.timestamp ? new Date(entry.timestamp).toLocaleDateString() : ''}</div>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>

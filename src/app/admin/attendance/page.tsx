@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import DtrPreview from '@/components/shared/DtrPreview';
 import { Pagination } from '@/components/shared/Pagination';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { ISchedule } from '@/types';
 import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
 import AttendanceCaptureModal from '@/components/shared/AttendanceCaptureModal';
 import { Calendar, Clock, Download, Filter, Search, UserCheck, UserX, Eye } from 'lucide-react';
@@ -59,6 +60,18 @@ export default function AdminAttendancePage() {
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isDtrModalOpen, setDtrModalOpen] = useState(false);
+  const [showSelectorModal, setShowSelectorModal] = useState(false);
+  const [selectorEmployee, setSelectorEmployee] = useState<string | null>(null);
+  const [selectorMonth, setSelectorMonth] = useState<Date>(new Date());
+  const [selectorCutoff, setSelectorCutoff] = useState<'1-15' | '16-end'>(() => {
+    const today = new Date();
+    const isCurrentMonth = selectorMonth?.getFullYear() === today.getFullYear() && selectorMonth?.getMonth() === today.getMonth();
+    return isCurrentMonth && today.getDate() > 15 ? '16-end' : '1-15';
+  });
+  const [selectorAttendance, setSelectorAttendance] = useState<AttendanceRecord[]>([]);
+  const [selectorLoading, setSelectorLoading] = useState(false);
+  const [selectedEmployeeSchedule, setSelectedEmployeeSchedule] = useState<ISchedule | null>(null);
+  const [selectorEmployeeSchedule, setSelectorEmployeeSchedule] = useState<ISchedule | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -117,6 +130,28 @@ export default function AdminAttendancePage() {
       setLoading(false);
     }
   };
+
+  const fetchScheduleForUser = async (userId: string | null, setter: (s: ISchedule | null) => void) => {
+    if (!userId) return setter(null);
+    try {
+      const resp = await fetch(`/api/schedule?userId=${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await resp.json();
+      if (data.success && data.schedules && data.schedules.length > 0) {
+        setter(data.schedules[0]);
+      } else {
+        setter(null);
+      }
+    } catch (err) {
+      console.error('Error fetching schedule for user', userId, err);
+      setter(null);
+    }
+  };
+
+  useEffect(() => {
+    if (isDtrModalOpen && selectedEmployee && selectedEmployee !== 'all') {
+      fetchScheduleForUser(selectedEmployee, setSelectedEmployeeSchedule);
+    }
+  }, [isDtrModalOpen, selectedEmployee]);
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -197,6 +232,13 @@ export default function AdminAttendancePage() {
             <Download className="w-5 h-5" />
             <span>Export CSV</span>
           </button>
+          <button
+            onClick={() => setShowSelectorModal(true)}
+            className="flex items-center space-x-2 px-3 py-2 bg-white border rounded-md text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <Download className="w-4 h-4" />
+            <span className="text-sm">Preview DTR (Select Employee)</span>
+          </button>
           {selectedEmployee !== 'all' ? (
             <button
               onClick={() => setDtrModalOpen(true)}
@@ -205,9 +247,7 @@ export default function AdminAttendancePage() {
               <Download className="w-4 h-4" />
               <span className="text-sm font-medium">Preview & Download DTR</span>
             </button>
-          ) : (
-            <div className="text-sm text-gray-600">Select an employee to download DTR</div>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -343,7 +383,7 @@ export default function AdminAttendancePage() {
               <div className="sm:col-span-1 flex justify-end">
                 <button onClick={() => setDtrModalOpen(false)} className="px-2 py-1 rounded-md bg-gray-100 mr-2 text-sm">Cancel</button>
                 <DtrDownloadButton
-                  employeeName={`${employees.find(e => e._id === selectedEmployee)?.firstName ?? ''} ${employees.find(e => e._id === selectedEmployee)?.lastName ?? ''}`.trim()}
+                  employeeName={(employees.find(e => e._id === selectedEmployee)?.firstName ?? '') + ' ' + (employees.find(e => e._id === selectedEmployee)?.lastName ?? '')}
                   employeeId={selectedEmployee}
                   attendanceRecords={attendanceRecords}
                   periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
@@ -358,7 +398,123 @@ export default function AdminAttendancePage() {
                 attendanceRecords={attendanceRecords}
                 periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
                 periodEnd={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 15) : endOfMonth(selectedMonth)}
+                schedule={selectedEmployeeSchedule ? { lunchStart: selectedEmployeeSchedule.lunchStart, lunchEnd: selectedEmployeeSchedule.lunchEnd } : undefined}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Selector Modal for Admin/Super-admin to pick employee + month/cutoff */}
+      {showSelectorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowSelectorModal(false)} aria-hidden />
+          <div className="relative w-full max-w-3xl max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+            <div className="flex items-start justify-between mb-2 gap-3">
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold">Preview & Download DTR (Select Employee)</h3>
+                <p className="text-xs sm:text-sm text-gray-500">Choose an employee, month, and cut-off to preview and download DTR</p>
+              </div>
+              <button onClick={() => setShowSelectorModal(false)} className="text-gray-500 hover:text-gray-700">Close</button>
+            </div>
+
+            <div className="mb-3 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Employee</label>
+                <select
+                  value={selectorEmployee ?? ''}
+                  onChange={(e) => setSelectorEmployee(e.target.value || null)}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">Select employee</option>
+                  {employees.map(emp => (
+                    <option key={emp._id} value={emp._id}>{emp.firstName} {emp.lastName} ({emp.employeeId})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={format(selectorMonth, 'yyyy-MM')}
+                  onChange={(e) => setSelectorMonth(new Date(e.target.value))}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Cut-off</label>
+                <select
+                  value={selectorCutoff}
+                  onChange={(e) => setSelectorCutoff(e.target.value as '1-15' | '16-end')}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="1-15">1 - 15</option>
+                  <option value="16-end">16 - end</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mb-4">
+              <button onClick={() => setShowSelectorModal(false)} className="px-2 py-1 rounded-md bg-gray-100 text-sm">Cancel</button>
+              <button
+                onClick={async () => {
+                  if (!selectorEmployee) return toast.error('Please select an employee');
+                  try {
+                    setSelectorLoading(true);
+                    const year = selectorMonth.getFullYear();
+                    const month = selectorMonth.getMonth();
+                    const startDateObj = new Date(year, month, 1);
+                    const endDateObj = new Date(year, month + 1, 0);
+                    const startDate = startDateObj.toISOString();
+                    const endDate = endDateObj.toISOString();
+                    const resp = await fetch(`/api/attendance?userId=${selectorEmployee}&startDate=${startDate}&endDate=${endDate}`, { headers: { Authorization: `Bearer ${token}` } });
+                    const data = await resp.json();
+                    if (data.success) {
+                      setSelectorAttendance(data.attendances || []);
+                      await fetchScheduleForUser(selectorEmployee, setSelectorEmployeeSchedule);
+                      // open preview modal within selector (reuse existing preview area below)
+                    } else {
+                      setSelectorAttendance([]);
+                      toast.error('No attendance records found for selected employee');
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    toast.error('Failed to fetch attendance');
+                  } finally {
+                    setSelectorLoading(false);
+                  }
+                }}
+                className="px-3 py-1 bg-primary-600 text-white rounded-md text-sm"
+              >
+                {selectorLoading ? 'Loading...' : 'Load & Preview'}
+              </button>
+            </div>
+
+            {/* Preview area */}
+            <div>
+              {selectorAttendance.length > 0 ? (
+                <>
+                  <DtrPreview
+                    attendanceRecords={selectorAttendance}
+                    periodStart={selectorCutoff === '1-15' ? new Date(selectorMonth.getFullYear(), selectorMonth.getMonth(), 1) : new Date(selectorMonth.getFullYear(), selectorMonth.getMonth(), 16)}
+                    periodEnd={selectorCutoff === '1-15' ? new Date(selectorMonth.getFullYear(), selectorMonth.getMonth(), 15) : new Date(selectorMonth.getFullYear(), selectorMonth.getMonth() + 1, 0)}
+                    schedule={selectorEmployeeSchedule ? { lunchStart: selectorEmployeeSchedule.lunchStart, lunchEnd: selectorEmployeeSchedule.lunchEnd } : undefined}
+                  />
+
+                  <div className="mt-3 flex justify-end">
+                      <DtrDownloadButton
+                        employeeName={(employees.find(e => e._id === selectorEmployee)?.firstName ?? '') + ' ' + (employees.find(e => e._id === selectorEmployee)?.lastName ?? '')}
+                        employeeId={selectorEmployee ?? undefined}
+                      attendanceRecords={selectorAttendance}
+                      periodStart={selectorCutoff === '1-15' ? new Date(selectorMonth.getFullYear(), selectorMonth.getMonth(), 1) : new Date(selectorMonth.getFullYear(), selectorMonth.getMonth(), 16)}
+                      periodEnd={selectorCutoff === '1-15' ? new Date(selectorMonth.getFullYear(), selectorMonth.getMonth(), 15) : new Date(selectorMonth.getFullYear(), selectorMonth.getMonth() + 1, 0)}
+                      filename={`DTR-${selectorEmployee}-${format(selectorMonth, 'yyyy-MM')}-${selectorCutoff}`}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="p-6 text-center text-gray-500">No preview loaded. Select employee and click "Load & Preview".</div>
+              )}
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { Calendar, Clock, TrendingUp, Download } from 'lucide-react';
 import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
 import DtrPreview from '@/components/shared/DtrPreview';
+import { apiClient } from '@/lib/api/client';
 import { toast } from '@/lib/toast';
 
 interface AttendanceRecord {
@@ -29,6 +30,7 @@ export default function EmployeeAttendancePage() {
   const { user, token } = useAuthStore();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeSchedule, setActiveSchedule] = useState<any | null>(null);
   const [isDtrModalOpen, setDtrModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [cutoff, setCutoff] = useState<'1-15' | '16-end'>(() => {
@@ -39,7 +41,7 @@ export default function EmployeeAttendancePage() {
 
   useEffect(() => {
     fetchAttendance();
-  }, [selectedMonth]);
+  }, [selectedMonth, cutoff]);
 
   const fetchAttendance = async () => {
     try {
@@ -64,6 +66,19 @@ export default function EmployeeAttendancePage() {
       const data = await response.json();
       if (data.success) {
         setAttendanceRecords(data.attendances);
+        // fetch active schedule for user to derive lunch times for DTR preview
+        try {
+          const schedRes = await apiClient.getSchedules(user?._id);
+          if (schedRes && Array.isArray(schedRes.schedules) && schedRes.schedules.length > 0) {
+            // pick most recently updated active schedule
+            const active = schedRes.schedules.find((s: any) => s.isActive) || schedRes.schedules[0];
+            setActiveSchedule(active);
+          } else {
+            setActiveSchedule(null);
+          }
+        } catch (err) {
+          setActiveSchedule(null);
+        }
       }
     } catch (error) {
       console.error('Error fetching attendance:', error);
@@ -224,6 +239,7 @@ export default function EmployeeAttendancePage() {
                 attendanceRecords={attendanceRecords}
                 periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
                 periodEnd={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 15) : endOfMonth(selectedMonth)}
+                schedule={activeSchedule ? { lunchStart: activeSchedule.lunchStart, lunchEnd: activeSchedule.lunchEnd } : undefined}
               />
             </div>
           </div>

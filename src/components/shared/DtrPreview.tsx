@@ -10,28 +10,79 @@ interface AttendanceRecord {
   overtimeHours?: number;
 }
 
+interface ScheduleWindow {
+  lunchStart?: string;
+  lunchEnd?: string;
+}
+
 interface Props {
   attendanceRecords: AttendanceRecord[];
   periodStart: Date;
   periodEnd: Date;
+  schedule?: ScheduleWindow;
 }
 
-export default function DtrPreview({ attendanceRecords, periodStart, periodEnd }: Props) {
+export default function DtrPreview({ attendanceRecords, periodStart, periodEnd, schedule }: Props) {
   const start = new Date(periodStart);
   const end = new Date(periodEnd);
   const rows: Array<JSX.Element> = [];
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const iso = d.toISOString().split('T')[0];
     const rec = attendanceRecords.find(r => r.date.split('T')[0] === iso || r.date === iso);
-    const inTime = rec?.timeIn ? format(parseISO(rec.timeIn.timestamp), 'h:mm a') : '';
-    const outTime = rec?.timeOut ? format(parseISO(rec.timeOut.timestamp), 'h:mm a') : '';
+    // derive morning/afternoon split using schedule if available
+    let morningIn = '';
+    let morningOut = '';
+    let afternoonIn = '';
+    let afternoonOut = '';
+
+    // handle cases with only timeIn, only timeOut, or both
+    if (rec?.timeIn || rec?.timeOut) {
+      const timeInDate = rec?.timeIn ? parseISO(rec.timeIn.timestamp) : null;
+      const timeOutDate = rec?.timeOut ? parseISO(rec.timeOut.timestamp) : null;
+
+      if (schedule?.lunchStart && schedule?.lunchEnd) {
+        const [lh, lm] = schedule.lunchStart.split(':').map(Number);
+        const [leh, lem] = schedule.lunchEnd.split(':').map(Number);
+        const lunchStartDate = timeInDate ? new Date(timeInDate) : new Date();
+        lunchStartDate.setHours(lh, lm, 0, 0);
+        const lunchEndDate = timeInDate ? new Date(timeInDate) : new Date();
+        lunchEndDate.setHours(leh, lem, 0, 0);
+
+        // morningIn: show timeIn if exists and before lunch end
+        if (timeInDate) {
+          morningIn = format(timeInDate, 'h:mm a');
+        }
+
+        // morningOut: if there's a timeOut before lunchStart, use timeOut; otherwise use lunchStart if timeIn before lunchStart
+        if (timeOutDate && timeOutDate < lunchStartDate) {
+          morningOut = format(timeOutDate, 'h:mm a');
+        } else if (timeInDate && timeInDate < lunchStartDate) {
+          morningOut = format(lunchStartDate, 'h:mm a');
+        }
+
+        // afternoonIn: if timeOut is after lunchEnd, set to lunchEnd or timeIn if timeIn after lunchEnd
+        if (timeOutDate && timeOutDate > lunchEndDate) {
+          const aIn = timeInDate && timeInDate > lunchEndDate ? timeInDate : lunchEndDate;
+          afternoonIn = format(aIn, 'h:mm a');
+          afternoonOut = format(timeOutDate, 'h:mm a');
+        } else if (timeInDate && timeInDate > lunchEndDate && !timeOutDate) {
+          // only timeIn in afternoon
+          afternoonIn = format(timeInDate, 'h:mm a');
+        }
+      } else {
+        // no schedule/lunch info: show timeIn/timeOut in the first IN/OUT pair
+        if (timeInDate) morningIn = format(timeInDate, 'h:mm a');
+        if (timeOutDate) morningOut = format(timeOutDate, 'h:mm a');
+      }
+    }
+
     rows.push(
       <tr key={iso} className="hover:bg-gray-50">
         <td className="px-3 py-2 text-center text-sm text-gray-700">{d.getDate()}</td>
-        <td className="px-3 py-2 text-center text-sm">{inTime}</td>
-        <td className="px-3 py-2 text-center text-sm">{outTime}</td>
-        <td className="px-3 py-2 text-center text-sm">{inTime}</td>
-        <td className="px-3 py-2 text-center text-sm">{outTime}</td>
+        <td className="px-3 py-2 text-center text-sm">{morningIn}</td>
+        <td className="px-3 py-2 text-center text-sm">{morningOut}</td>
+        <td className="px-3 py-2 text-center text-sm">{afternoonIn}</td>
+        <td className="px-3 py-2 text-center text-sm">{afternoonOut}</td>
         <td className="px-3 py-2 text-center text-sm">{rec?.overtimeHours ? (rec.overtimeHours > 0 ? rec.overtimeHours.toFixed(2) : '') : ''}</td>
         <td className="px-3 py-2 text-center text-sm">{rec?.overtimeHours ? (rec.overtimeHours > 0 ? rec.overtimeHours.toFixed(2) : '') : ''}</td>
       </tr>

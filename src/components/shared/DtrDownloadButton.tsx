@@ -45,9 +45,11 @@ function generateHtml(props: Props) {
   const start = periodStart || defaultStart;
   const end = periodEnd || defaultEnd;
 
-  // Build rows for 1..15 to match provided format
+  // Build rows for the selected period (respect periodStart/periodEnd)
   const rows: string[] = [];
-  for (let day = 1; day <= 15; day++) {
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  for (let day = startDay; day <= endDay; day++) {
     const d = new Date(start.getFullYear(), start.getMonth(), day);
     const dateISO = d.toISOString().split('T')[0];
     const rec = attendanceRecords.find(r => r.date.split('T')[0] === dateISO || r.date === dateISO);
@@ -135,15 +137,49 @@ function generateHtml(props: Props) {
 export default function DtrDownloadButton(props: Props) {
   const { filename = 'dtr.pdf' } = props;
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const html = generateHtml(props);
-    const w = window.open('', '_blank', 'noopener');
-    if (w) {
-      try {
+
+    // Try to generate a PDF client-side using jspdf + html2canvas if available.
+    try {
+      const { jsPDF } = await import('jspdf');
+      const html2canvas = (await import('html2canvas')).default;
+
+      // Render HTML to a hidden container so html2canvas can capture it
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.width = '800px';
+      container.innerHTML = html;
+      document.body.appendChild(container);
+
+      // Wait a tick for images/fonts to load
+      await new Promise((res) => setTimeout(res, 100));
+
+      const canvas = await html2canvas(container, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgProps = (pdf as any).getImageProperties ? (pdf as any).getImageProperties(imgData) : { width: canvas.width, height: canvas.height };
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save((filename || 'dtr') + '.pdf');
+      document.body.removeChild(container);
+      toast.success('DTR downloaded as PDF');
+      return;
+    } catch (err) {
+      // If PDF libs are not available or an error occurs, fall back to previous behavior
+      console.warn('PDF generation failed or libraries missing:', err);
+    }
+
+    // Fallback: open HTML in new window and prompt print (existing behavior)
+    try {
+      const w = window.open('', '_blank', 'noopener');
+      if (w) {
         w.document.open();
         w.document.write(html);
         w.document.close();
-        // call print after the new window loads content
         w.onload = () => {
           try {
             w.focus();
@@ -152,28 +188,20 @@ export default function DtrDownloadButton(props: Props) {
             // ignore
           }
         };
-      } catch (e) {
-        // fallback to download HTML if writing failed
-        const blob = new Blob([html], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = (filename || 'dtr') + '.html';
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.error('Popup blocked — saved DTR as HTML. Open and print to PDF.');
+        return;
       }
-    } else {
-      // Popup blocked — fallback to download an HTML file the user can open and print
-      const blob = new Blob([html], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = (filename || 'dtr') + '.html';
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.error('Popup blocked — saved DTR as HTML. Open and print to PDF.');
+    } catch (e) {
+      // ignore and fallback to download HTML
     }
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (filename || 'dtr') + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.error('Popup blocked — saved DTR as HTML. Open and print to PDF.');
   };
 
   return (
