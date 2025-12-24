@@ -7,6 +7,8 @@ export interface IUser {
   lastName: string;
   role: 'admin' | 'employee' | 'super-admin';
   employeeId?: string;
+  position?: string;
+  department?: string;
   birthday?: Date;
   gender?: 'male' | 'female' | 'other';
   age?: number;
