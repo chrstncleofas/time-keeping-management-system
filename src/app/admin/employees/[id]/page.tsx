@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useParams } from 'next/navigation';
 import {
@@ -212,6 +213,41 @@ export default function EditEmployeePage() {
     return null;
   }
 
+  // Client-side mount for admin DTR button
+  React.useEffect(() => {
+    // lazy-load the button so we don't bloat SSR
+    (async () => {
+      try {
+        const el = document.getElementById('admin-dtr-button');
+        if (!el) return;
+        const mod = await import('@/components/shared/DtrDownloadButton');
+        // fetch attendance for employee for current month
+        const start = new Date();
+        const startDate = new Date(start.getFullYear(), start.getMonth(), 1).toISOString();
+        const endDate = new Date(start.getFullYear(), start.getMonth() + 1, 0).toISOString();
+        const resp = await fetch(`/api/attendance?userId=${employee._id}&startDate=${startDate}&endDate=${endDate}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await resp.json();
+        const container = document.createElement('div');
+        el.appendChild(container);
+        // @ts-ignore
+        createRoot(container).render(
+          // @ts-ignore
+          React.createElement(mod.default, {
+            employeeName: `${employee.firstName} ${employee.lastName}`,
+            employeeId: employee._id,
+            attendanceRecords: data.attendances || [],
+            periodStart: new Date(start.getFullYear(), start.getMonth(), 1),
+            periodEnd: new Date(start.getFullYear(), start.getMonth() + 1, 0),
+          })
+        );
+      } catch (e) {
+        // ignore lazy mount errors
+      }
+    })();
+  }, [employee, token]);
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       {/* Header */}
@@ -232,6 +268,11 @@ export default function EditEmployeePage() {
             <p className="text-gray-600 mt-2">Update employee information</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* DTR download will fetch attendance for this employee via client-side if needed */}
+            <div>
+              {/* @ts-ignore - dynamic import not required here */}
+              <script />
+            </div>
             <button
               onClick={handleToggleStatus}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
@@ -259,6 +300,11 @@ export default function EditEmployeePage() {
               <Trash2 className="w-4 h-4" />
               Delete
             </button>
+            <div>
+              {/* Place DTR button here for admins (requires attendance fetch) */}
+              {/* We'll render a client-only button to avoid SSR issues */}
+              <div id="admin-dtr-button" />
+            </div>
           </div>
         </div>
       </div>

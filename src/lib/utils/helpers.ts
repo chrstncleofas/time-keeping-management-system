@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { format, parseISO, startOfDay, endOfDay, differenceInMinutes } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { format, parseISO, startOfDay, endOfDay, differenceInMinutes } from 'date-fns';
 
 // Philippine timezone constant
 export const PHILIPPINE_TIMEZONE = 'Asia/Manila';
@@ -74,6 +74,8 @@ export function calculateDetailedHours(
   totalHours: number;
   lunchBreakMinutes: number;
   workedHours: number;
+  overtimeMinutes: number;
+  overtimeHours: number;
 } {
   const timeInDate = typeof timeIn === 'string' ? parseISO(timeIn) : timeIn;
   const timeOutDate = typeof timeOut === 'string' ? parseISO(timeOut) : timeOut;
@@ -89,11 +91,20 @@ export function calculateDetailedHours(
     if (effectiveIn < scheduleStartDate) effectiveIn = scheduleStartDate;
   }
 
+  // Do NOT clamp effectiveOut to schedule end here — we need the full interval to compute overtime.
+  // We'll compute regular (scheduled) worked minutes separately using scheduleStartTime/scheduleEndTime.
+
+  let scheduleStartDate: Date | null = null;
+  let scheduleEndDate: Date | null = null;
+  if (scheduleStartTime) {
+    const [sh, sm] = scheduleStartTime.split(':').map(Number);
+    scheduleStartDate = new Date(timeInDate);
+    scheduleStartDate.setHours(sh, sm, 0, 0);
+  }
   if (scheduleEndTime) {
     const [eh, em] = scheduleEndTime.split(':').map(Number);
-    const scheduleEndDate = new Date(effectiveOut);
+    scheduleEndDate = new Date(timeOutDate);
     scheduleEndDate.setHours(eh, em, 0, 0);
-    if (effectiveOut > scheduleEndDate) effectiveOut = scheduleEndDate;
   }
 
   let totalMinutes = differenceInMinutes(effectiveOut, effectiveIn);
@@ -127,11 +138,38 @@ export function calculateDetailedHours(
   const workedMinutes = Math.max(0, totalMinutes - lunchBreakMinutes);
   const workedHours = workedMinutes / 60;
 
+  // Compute overtime: time beyond scheduleEndDate (or 0 if not provided)
+  let overtimeMinutes = 0;
+  if (scheduleEndDate) {
+    const otStart = scheduleEndDate;
+    if (effectiveOut > otStart) {
+      overtimeMinutes = differenceInMinutes(effectiveOut, otStart);
+      // exclude any lunch overlap that falls inside overtime window (unlikely but safe)
+      if (lunchBreakMinutes > 0 && scheduleLunchStart && scheduleLunchEnd) {
+        // lunch overlap already subtracted from workedMinutes; ensure overtime excludes lunch overlap portion
+        const [lh, lm] = scheduleLunchStart.split(':').map(Number);
+        const [lEH, lEM] = scheduleLunchEnd.split(':').map(Number);
+        const lunchStartDate = new Date(effectiveIn);
+        lunchStartDate.setHours(lh, lm, 0, 0);
+        const lunchEndDate = new Date(effectiveIn);
+        lunchEndDate.setHours(lEH, lEM, 0, 0);
+        const overlapStart = otStart > lunchStartDate ? otStart : lunchStartDate;
+        const overlapEnd = effectiveOut < lunchEndDate ? effectiveOut : lunchEndDate;
+        const overlap = differenceInMinutes(overlapEnd, overlapStart);
+        if (overlap > 0) {
+          overtimeMinutes = Math.max(0, overtimeMinutes - overlap);
+        }
+      }
+    }
+  }
+
   return {
     totalMinutes,
     totalHours: Math.round(totalHours * 100) / 100,
     lunchBreakMinutes,
     workedHours: Math.round(workedHours * 100) / 100,
+    overtimeMinutes,
+    overtimeHours: Math.round((overtimeMinutes / 60) * 100) / 100,
   };
 }
 

@@ -1,7 +1,13 @@
-import { NextResponse } from 'next/server';
+import { 
+  createAuditLog,
+  getClientIP,
+  getUserAgent,
+  AUDIT_ACTIONS
+} from '@/lib/utils/auditLog';
+
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 import * as service from '@/server/services/authService';
-import { createAuditLog, getClientIP, getUserAgent, AUDIT_ACTIONS } from '@/lib/utils/auditLog';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 

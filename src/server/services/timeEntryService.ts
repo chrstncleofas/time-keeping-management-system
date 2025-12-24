@@ -74,6 +74,8 @@ export async function createTimeEntry({ userId, type, photoBase64, location }: {
       attendance.totalHours = hoursBreakdown.totalHours;
       attendance.lunchBreakMinutes = hoursBreakdown.lunchBreakMinutes;
       attendance.workedHours = hoursBreakdown.workedHours;
+      attendance.overtimeMinutes = (hoursBreakdown as any).overtimeMinutes || 0;
+      attendance.overtimeHours = (hoursBreakdown as any).overtimeHours || 0;
     }
     attendance.isEarlyOut = isEarlyOut(timeEntry.timestamp, schedule.timeOut);
     attendance.earlyOutMinutes = calculateEarlyOutMinutes(timeEntry.timestamp, schedule.timeOut);
@@ -92,4 +94,33 @@ export async function findTimeEntries({ userId, startDate, endDate }: { userId: 
   }
   const timeEntries = await TimeEntry.find(query).sort({ timestamp: -1 }).limit(100);
   return timeEntries;
+}
+
+export async function updateTimeEntryStatus(id: string, status: 'approved' | 'rejected') {
+  await connectDB();
+
+  const entry = await TimeEntry.findById(id);
+  if (!entry) throw new Error('Time entry not found');
+
+  entry.status = status;
+  await entry.save();
+
+  // Also update any Attendance document that has this time entry embedded
+  // Attendance stores timeIn/timeOut as plain objects, so find and update
+  const AttendanceModel = (await import('@/lib/models/Attendance')).default;
+  const attendance = await AttendanceModel.findOne({
+    $or: [{ 'timeIn._id': id }, { 'timeOut._id': id }],
+  });
+
+  if (attendance) {
+    if (attendance.timeIn && (attendance.timeIn as any)._id?.toString() === id.toString()) {
+      (attendance.timeIn as any).status = status;
+    }
+    if (attendance.timeOut && (attendance.timeOut as any)._id?.toString() === id.toString()) {
+      (attendance.timeOut as any).status = status;
+    }
+    await attendance.save();
+  }
+
+  return entry;
 }

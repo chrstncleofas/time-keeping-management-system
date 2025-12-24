@@ -3,9 +3,12 @@
 import { toast } from '@/lib/toast';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useEffect, useState } from 'react';
+import DtrPreview from '@/components/shared/DtrPreview';
 import { Pagination } from '@/components/shared/Pagination';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
-import { Calendar, Clock, Download, Filter, Search, UserCheck, UserX } from 'lucide-react';
+import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
+import AttendanceCaptureModal from '@/components/shared/AttendanceCaptureModal';
+import { Calendar, Clock, Download, Filter, Search, UserCheck, UserX, Eye } from 'lucide-react';
 
 interface AttendanceRecord {
   _id: string;
@@ -25,6 +28,8 @@ interface AttendanceRecord {
   totalHours?: number;
   lunchBreakMinutes?: number;
   workedHours?: number;
+  overtimeMinutes?: number;
+  overtimeHours?: number;
   isLate: boolean;
   isEarlyOut: boolean;
   status: 'present' | 'absent' | 'on-leave' | 'holiday';
@@ -44,8 +49,16 @@ export default function AdminAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [cutoff, setCutoff] = useState<'1-15' | '16-end'>(() => {
+    const today = new Date();
+    const isCurrentMonth = selectedMonth.getFullYear() === today.getFullYear() && selectedMonth.getMonth() === today.getMonth();
+    return isCurrentMonth && today.getDate() > 15 ? '16-end' : '1-15';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isDtrModalOpen, setDtrModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -134,10 +147,11 @@ export default function AdminAttendancePage() {
     totalAbsent: filteredRecords.filter(r => r.status === 'absent').length,
     totalLate: filteredRecords.filter(r => r.isLate).length,
     totalOnLeave: filteredRecords.filter(r => r.status === 'on-leave').length,
+    totalOvertimeHours: filteredRecords.reduce((sum, r) => sum + (r.overtimeHours ?? 0), 0),
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Employee ID', 'Name', 'Time In', 'Time Out', 'Duration', 'Break', 'Worked', 'Status', 'Late'];
+    const headers = ['Date', 'Employee ID', 'Name', 'Time In', 'Time Out', 'Duration', 'Break', 'Worked', 'OT', 'Status', 'Late'];
     const rows = filteredRecords.map(record => {
       const lunch = record.lunchBreakMinutes ?? 0;
       const empId = record.userId?.employeeId ?? '';
@@ -151,6 +165,7 @@ export default function AdminAttendancePage() {
         record.totalHours ? record.totalHours.toFixed(2) : '-',
         lunch > 0 ? `-${lunch}min` : '-',
         record.workedHours ? record.workedHours.toFixed(2) : '-',
+        record.overtimeHours ? record.overtimeHours.toFixed(2) : '-',
         record.status,
         record.isLate ? 'Yes' : 'No',
       ];
@@ -174,17 +189,30 @@ export default function AdminAttendancePage() {
           <h1 className="text-3xl font-bold text-gray-900">Attendance Management</h1>
           <p className="text-gray-600 mt-1">Track and monitor employee attendance</p>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-        >
-          <Download className="w-5 h-5" />
-          <span>Export CSV</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={exportToCSV}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            <Download className="w-5 h-5" />
+            <span>Export CSV</span>
+          </button>
+          {selectedEmployee !== 'all' ? (
+            <button
+              onClick={() => setDtrModalOpen(true)}
+              className="flex items-center space-x-2 px-3 py-2 bg-primary-600 text-white rounded-md shadow-sm hover:bg-primary-700 focus:outline-none"
+            >
+              <Download className="w-4 h-4" />
+              <span className="text-sm font-medium">Preview & Download DTR</span>
+            </button>
+          ) : (
+            <div className="text-sm text-gray-600">Select an employee to download DTR</div>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -192,6 +220,15 @@ export default function AdminAttendancePage() {
               <p className="text-2xl font-bold text-green-600">{stats.totalPresent}</p>
             </div>
             <UserCheck className="w-8 h-8 text-green-600" />
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">OT Hours</p>
+              <p className="text-2xl font-bold text-indigo-600">{stats.totalOvertimeHours.toFixed(2)}</p>
+            </div>
+            <svg className="w-8 h-8 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         </div>
         <div className="bg-white p-6 rounded-xl shadow-sm">
@@ -225,7 +262,7 @@ export default function AdminAttendancePage() {
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-xl shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Employee Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -247,18 +284,7 @@ export default function AdminAttendancePage() {
           </div>
 
           {/* Month Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="w-4 h-4 inline mr-1" />
-              Month
-            </label>
-            <input
-              type="month"
-              value={format(selectedMonth, 'yyyy-MM')}
-              onChange={(e) => setSelectedMonth(new Date(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
+          {/* Month & cut-off moved into DTR modal to avoid duplicate preview */}
 
           {/* Search */}
           <div>
@@ -278,6 +304,65 @@ export default function AdminAttendancePage() {
       </div>
 
       {/* Attendance List */}
+      {/* Inline DTR preview removed — use modal preview */}
+
+      {/* Admin DTR Modal */}
+      {isDtrModalOpen && selectedEmployee !== 'all' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDtrModalOpen(false)} aria-hidden />
+          <div className="relative w-full max-w-3xl max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+            <div className="flex items-start justify-between mb-2 gap-3">
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold">Preview DTR - {employees.find(e => e._id === selectedEmployee)?.firstName} {employees.find(e => e._id === selectedEmployee)?.lastName}</h3>
+                <p className="text-xs sm:text-sm text-gray-500">{format(selectedMonth, 'MMMM yyyy')} — {cutoff === '1-15' ? '1 - 15' : '16 - end'}</p>
+              </div>
+              <button onClick={() => setDtrModalOpen(false)} className="text-gray-500 hover:text-gray-700">Close</button>
+            </div>
+
+            <div className="mb-3 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={format(selectedMonth, 'yyyy-MM')}
+                  onChange={(e) => setSelectedMonth(new Date(e.target.value))}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Cut-off</label>
+                <select
+                  value={cutoff}
+                  onChange={(e) => setCutoff(e.target.value as '1-15' | '16-end')}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="1-15">1 - 15</option>
+                  <option value="16-end">16 - end</option>
+                </select>
+              </div>
+              <div className="sm:col-span-1 flex justify-end">
+                <button onClick={() => setDtrModalOpen(false)} className="px-2 py-1 rounded-md bg-gray-100 mr-2 text-sm">Cancel</button>
+                <DtrDownloadButton
+                  employeeName={`${employees.find(e => e._id === selectedEmployee)?.firstName ?? ''} ${employees.find(e => e._id === selectedEmployee)?.lastName ?? ''}`.trim()}
+                  employeeId={selectedEmployee}
+                  attendanceRecords={attendanceRecords}
+                  periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
+                  periodEnd={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 15) : endOfMonth(selectedMonth)}
+                  filename={`DTR-${selectedEmployee}-${format(selectedMonth, 'yyyy-MM')}-${cutoff}`}
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <DtrPreview
+                attendanceRecords={attendanceRecords}
+                periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
+                periodEnd={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 15) : endOfMonth(selectedMonth)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -305,23 +390,29 @@ export default function AdminAttendancePage() {
                   Worked
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  OT
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Late
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={11} className="px-6 py-12 text-center text-gray-500">
                     Loading attendance records...
                   </td>
                 </tr>
               ) : filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={11} className="px-6 py-12 text-center text-gray-500">
                     No attendance records found
                   </td>
                 </tr>
@@ -352,6 +443,9 @@ export default function AdminAttendancePage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-green-700 font-semibold">
                       {record.workedHours ? `${record.workedHours.toFixed(2)} hrs` : '-'}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-indigo-700 font-semibold">
+                      {record.overtimeHours ? `${record.overtimeHours.toFixed(2)} hrs` : '-'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(record.status)}`}>
                         {record.status}
@@ -368,12 +462,33 @@ export default function AdminAttendancePage() {
                         </span>
                       )}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <button
+                        onClick={() => {
+                          setSelectedRecord(record);
+                          setModalOpen(true);
+                        }}
+                        className="p-2 rounded-md hover:bg-gray-100"
+                        title="View capture"
+                      >
+                        <Eye className="w-5 h-5 text-gray-600" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+        {/* View Modal (reusable component) */}
+        <AttendanceCaptureModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          dateLabel={selectedRecord ? format(parseISO(selectedRecord.date), 'PP') : undefined}
+          userName={selectedRecord ? `${selectedRecord.userId?.firstName ?? ''} ${selectedRecord.userId?.lastName ?? ''}`.trim() : undefined}
+          timeIn={selectedRecord?.timeIn as any}
+          timeOut={selectedRecord?.timeOut as any}
+        />
 
         {/* Pagination */}
         {filteredRecords.length > 0 && (

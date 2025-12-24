@@ -18,6 +18,7 @@ import { ISchedule, DayOfWeek } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useEffect, useState } from 'react';
 import { Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
 
 const DAYS_FULL: { [key in DayOfWeek]: string } = {
   monday: 'Monday',
@@ -51,6 +52,9 @@ export default function EmployeeSchedulePage() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedAttendance, setSelectedAttendance] = useState<AttendanceRecord | null>(null);
+  const [isDayModalOpen, setDayModalOpen] = useState(false);
 
   useEffect(() => {
     fetchSchedule();
@@ -181,53 +185,60 @@ export default function EmployeeSchedulePage() {
         days.push(
           <div
             key={day.toString()}
-            className={`min-h-[100px] border border-gray-200 p-2 ${
+            onClick={() => {
+              setSelectedDate(cloneDay);
+              setSelectedAttendance(attendance || null);
+              setDayModalOpen(true);
+            }}
+            role="button"
+            tabIndex={0}
+            className={`min-h-[56px] sm:min-h-[80px] border border-gray-200 p-1 sm:p-2 overflow-hidden cursor-pointer ${
               !isCurrentMonth ? 'bg-gray-50' : 'bg-white'
             } ${isToday ? 'ring-2 ring-primary-500' : ''}`}
           >
             <div className="flex justify-between items-start mb-1">
-              <span className={`text-sm font-medium ${
+              <span className={`text-xs sm:text-sm font-medium ${
                 !isCurrentMonth ? 'text-gray-400' : isToday ? 'text-primary-600 font-bold' : 'text-gray-900'
               }`}>
                 {format(cloneDay, 'd')}
               </span>
               {isWorkday && isCurrentMonth && (
-                <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                <span className="hidden sm:inline-block text-[10px] px-1 py-0.5 bg-blue-100 text-blue-700 rounded">
                   Work
                 </span>
               )}
             </div>
 
             {isCurrentMonth && attendance && (
-              <div className="space-y-1">
+              <div className="space-y-1 text-[11px] max-h-14 overflow-hidden">
                 {attendance.status === 'present' && attendance.timeIn ? (
                   <>
-                    <div className="flex items-center text-xs font-medium text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+                    <div className="flex items-center text-[11px] font-medium text-green-700 bg-green-50 px-1 py-0.5 rounded">
                       <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
-                      <span>In: {format(parseISO(attendance.timeIn.timestamp), 'h:mm a')}</span>
+                      <span className="truncate">In: {format(parseISO(attendance.timeIn.timestamp), 'h:mm a')}</span>
                     </div>
                     {attendance.timeOut && (
-                      <div className="flex items-center text-xs font-medium text-red-700 bg-red-50 px-1.5 py-0.5 rounded">
+                      <div className="flex items-center text-[11px] font-medium text-red-700 bg-red-50 px-1 py-0.5 rounded">
                         <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
-                        <span>Out: {format(parseISO(attendance.timeOut.timestamp), 'h:mm a')}</span>
+                        <span className="truncate">Out: {format(parseISO(attendance.timeOut.timestamp), 'h:mm a')}</span>
                       </div>
                     )}
                     {attendance.isLate && (
-                      <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded block">
+                      <span className="text-[10px] px-1 py-0.5 bg-yellow-100 text-yellow-800 rounded block truncate">
                         Late
                       </span>
                     )}
                   </>
                 ) : attendance.status === 'absent' && isWorkday ? (
-                  <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded block">
+                  <span className="text-[11px] px-1 py-0.5 bg-red-100 text-red-800 rounded block truncate">
                     Absent
                   </span>
                 ) : attendance.status === 'on-leave' ? (
-                  <span className="text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded block">
+                  <span className="text-[11px] px-1 py-0.5 bg-yellow-100 text-yellow-800 rounded block truncate">
                     On Leave
                   </span>
                 ) : attendance.status === 'holiday' ? (
-                  <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded block">
+                  <span className="text-[11px] px-1 py-0.5 bg-purple-100 text-purple-800 rounded block truncate">
                     Holiday
                   </span>
                 ) : null}
@@ -238,7 +249,7 @@ export default function EmployeeSchedulePage() {
         day = addDays(day, 1);
       }
       rows.push(
-        <div key={day.toString()} className="grid grid-cols-7">
+        <div key={day.toString()} className="grid grid-cols-7 gap-1">
           {days}
         </div>
       );
@@ -288,6 +299,17 @@ export default function EmployeeSchedulePage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Schedule</h1>
           <p className="text-gray-600 mt-1">Calendar view of your work schedule and attendance</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <DtrDownloadButton
+            employeeName={`${user?.firstName || ''} ${user?.lastName || ''}`}
+            employeeId={user?._id}
+            position={user?.position || ''}
+            department={user?.department || ''}
+            attendanceRecords={attendanceRecords}
+            periodStart={new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)}
+            periodEnd={new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)}
+          />
         </div>
       </div>
 
@@ -348,7 +370,7 @@ export default function EmployeeSchedulePage() {
         {/* Calendar Header */}
         <div className="grid grid-cols-7 mb-2">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-center font-semibold text-gray-700 py-2">
+            <div key={day} className="text-center font-semibold text-gray-700 py-1 text-xs sm:text-base">
               {day}
             </div>
           ))}
@@ -433,6 +455,56 @@ export default function EmployeeSchedulePage() {
           })}
         </div>
       </div>
+
+      {/* Day Detail Modal */}
+      {isDayModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDayModalOpen(false)} aria-hidden />
+          <div className="relative bg-white rounded-lg shadow-lg max-w-sm w-full mx-4 p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">{selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Details'}</h3>
+                <p className="text-sm text-gray-600">Attendance details</p>
+              </div>
+              <button onClick={() => setDayModalOpen(false)} className="text-gray-500 hover:text-gray-700">Close</button>
+            </div>
+            <div className="mt-4">
+              {selectedAttendance ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Status</span>
+                    <span className="text-sm text-gray-700 capitalize">{selectedAttendance.status}</span>
+                  </div>
+                  {selectedAttendance.timeIn && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Time In</span>
+                      <span className="text-sm text-gray-700">{format(parseISO(selectedAttendance.timeIn.timestamp), 'h:mm a')}</span>
+                    </div>
+                  )}
+                  {selectedAttendance.timeOut && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Time Out</span>
+                      <span className="text-sm text-gray-700">{format(parseISO(selectedAttendance.timeOut.timestamp), 'h:mm a')}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Late</span>
+                    <span className="text-sm text-gray-700">{selectedAttendance.isLate ? 'Yes' : 'No'}</span>
+                  </div>
+                  {selectedAttendance.workedHours !== undefined && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Worked Hours</span>
+                      <span className="text-sm text-gray-700">{selectedAttendance.workedHours}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-gray-600">No attendance record for this date.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

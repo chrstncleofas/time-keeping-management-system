@@ -62,6 +62,8 @@ export interface IAttendance {
   totalHours?: number;
   lunchBreakMinutes?: number; // Lunch break deduction in minutes
   workedHours?: number; // Total hours minus lunch break
+  overtimeMinutes?: number; // Minutes counted as overtime (beyond schedule end)
+  overtimeHours?: number; // Overtime in hours (rounded)
   lateMinutes?: number;
   earlyOutMinutes?: number;
   isLate: boolean;

@@ -2,13 +2,19 @@ import nodemailer from 'nodemailer';
 
 // Create email transporter
 const createTransporter = () => {
+  const host = process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '587');
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  const secure = (process.env.SMTP_SECURE === 'true') || (process.env.EMAIL_SECURE === 'true') || port === 465;
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
+    host,
+    port,
+    secure,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user,
+      pass,
     },
   });
 };
@@ -22,14 +28,19 @@ interface EmailOptions {
 // Send email
 export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    if (!smtpUser || !smtpPass) {
       return { success: false, error: 'Email not configured' };
     }
 
     const transporter = createTransporter();
 
+    const fromAddress = (process.env.EMAIL_FROM || smtpUser) as string;
+    const displayName = process.env.NEXT_PUBLIC_APP_NAME || 'TKMS';
+
     const info = await transporter.sendMail({
-      from: `"IBAYTECH CORP TKMS" <${process.env.SMTP_USER}>`,
+      from: `"${displayName}" <${fromAddress}>`,
       to,
       subject,
       html,
@@ -190,4 +201,59 @@ export const emailTemplates = {
     </body>
     </html>
   `,
+  scheduleUpdated: (employeeName: string, schedule: any) => {
+    const days = Array.isArray(schedule?.days) ? schedule.days.map((d: string) => d.charAt(0).toUpperCase() + d.slice(1)).join(', ') : '';
+    const timeIn = schedule?.timeIn || '';
+    const lunchStart = schedule?.lunchStart || '';
+    const lunchEnd = schedule?.lunchEnd || '';
+    const timeOut = schedule?.timeOut || '';
+
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 24px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(16,24,40,0.08); }
+        .header { background: linear-gradient(135deg, #0f1724 0%, #0b1220 100%); color: white; padding: 24px; text-align: left; }
+        .brand { font-size: 20px; font-weight: 700; }
+        .title { font-size: 18px; margin-top: 8px; }
+        .content { padding: 24px; color: #111827; }
+        .greet { margin-bottom: 16px; }
+        .box { background: #f8fafc; border: 1px solid #e6edf3; padding: 16px; border-radius: 6px; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .label { color: #6b7280; font-size: 13px; }
+        .value { color: #111827; font-weight: 600; }
+        .cta { margin-top: 18px; text-align: center; }
+        .btn { display: inline-block; background: #1565d8; color: white; padding: 10px 18px; border-radius: 6px; text-decoration: none; }
+        .footer { padding: 18px; font-size: 12px; color: #6b7280; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="brand">${process.env.NEXT_PUBLIC_APP_NAME || 'IBAYTECH CORP'}</div>
+          <div class="title">Your schedule was updated</div>
+        </div>
+        <div class="content">
+          <p class="greet">Hi ${employeeName || ''},</p>
+          <p>We've updated your schedule. See the details below.</p>
+
+          <div class="box">
+            <div class="row"><div class="label">Days</div><div class="value">${days}</div></div>
+            <div class="row"><div class="label">Time In</div><div class="value">${timeIn}</div></div>
+            ${lunchStart && lunchEnd ? `<div class="row"><div class="label">Lunch</div><div class="value">${lunchStart} - ${lunchEnd}</div></div>` : ''}
+            <div class="row"><div class="label">Time Out</div><div class="value">${timeOut}</div></div>
+          </div>
+
+          <div class="cta">
+            <a class="btn" href="${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employee/schedule">View My Schedule</a>
+          </div>
+        </div>
+        <div class="footer">Regards,<br/>${process.env.NEXT_PUBLIC_APP_NAME || 'IBAYTECH CORP'}</div>
+      </div>
+    </body>
+    </html>
+  `;
+  },
 };

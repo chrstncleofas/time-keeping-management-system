@@ -53,3 +53,22 @@ export async function getEntries(request: NextRequest, user: any) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function updateEntry(request: NextRequest, user: any) {
+  try {
+    if (user.role !== 'admin' && user.role !== 'super-admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const { id, status } = await request.json();
+    if (!id || !status || !['approved', 'rejected'].includes(status)) return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+
+    const updated = await service.updateTimeEntryStatus(id, status as 'approved' | 'rejected');
+
+    // Audit log for admin action
+    await createAuditLog({ userId: user.userId, userName: user.name || user.email || user.userId, userRole: user.role, action: status === 'approved' ? AUDIT_ACTIONS.TIME_IN : AUDIT_ACTIONS.TIME_OUT, category: 'ATTENDANCE', description: `Time entry ${id} marked ${status} by admin`, ipAddress: getClientIP(request), userAgent: getUserAgent(request), metadata: { timeEntryId: id }, status: 'SUCCESS' });
+
+    return NextResponse.json({ success: true, timeEntry: updated });
+  } catch (err: any) {
+    logger.error('updateEntry error', { message: err.message, stack: err.stack, route: '/api/time-entries' });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

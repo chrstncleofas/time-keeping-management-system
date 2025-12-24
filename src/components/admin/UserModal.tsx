@@ -100,47 +100,77 @@ export const UserModal: React.FC<Props> = ({ open, mode, initial = {}, onClose, 
     <>
       <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <form onSubmit={handleSubmit} onClick={e => e.stopPropagation()} className="bg-white rounded-lg shadow-xl max-w-lg w-full">
-          <div className="p-4 border-b flex items-start justify-between">
+        <form onSubmit={handleSubmit} onClick={e => e.stopPropagation()} className="bg-white rounded-xl shadow-2xl max-w-2xl w-full">
+          <div className="p-5 border-b flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">{mode === 'create' ? 'Create User' : 'Change Credentials'}</h3>
+              <h3 className="text-xl font-bold text-gray-900">{mode === 'create' ? 'Create User' : 'Change Credentials'}</h3>
               <p className="text-sm text-gray-600 mt-1">{mode === 'create' ? 'Provide details for the new user' : 'Update email and/or password for the user'}</p>
             </div>
-            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-100">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-4 space-y-3">
+          <div className="p-6">
             {mode === 'create' && (
-              <div className="grid grid-cols-2 gap-3">
-                <input required placeholder="First name" value={form.firstName} onChange={e => update('firstName', e.target.value)} className="p-2 border rounded" />
-                <input placeholder="Last name" required value={form.lastName} onChange={e => update('lastName', e.target.value)} className="p-2 border rounded" />
-                <input placeholder="Email" required value={form.email} onChange={e => update('email', e.target.value)} className="p-2 border rounded col-span-2" />
-                <input placeholder="Password" type="password" required value={form.password} onChange={e => update('password', e.target.value)} className="p-2 border rounded" />
-                <select value={form.role} onChange={e => update('role', e.target.value)} className="p-2 border rounded">
-                  <option value="employee">employee</option>
-                  <option value="admin">admin</option>
-                  <option value="super-admin">super-admin</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">First name</label>
+                  <input required placeholder="First name" value={form.firstName} onChange={e => update('firstName', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Last name</label>
+                  <input placeholder="Last name" required value={form.lastName} onChange={e => update('lastName', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-600 mb-1">Email</label>
+                  <input placeholder="Email" required value={form.email} onChange={e => update('email', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Password</label>
+                  <input placeholder="Password" type="password" required value={form.password} onChange={e => update('password', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Role</label>
+                  <select value={form.role} onChange={e => update('role', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm">
+                    <option value="employee">employee</option>
+                    <option value="admin">admin</option>
+                    <option value="super-admin">super-admin</option>
+                  </select>
+                </div>
               </div>
             )}
 
             {mode === 'credentials' && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <input placeholder="First name" value={form.firstName} onChange={e => update('firstName', e.target.value)} className="p-2 border rounded" />
-                  <input placeholder="Last name" value={form.lastName} onChange={e => update('lastName', e.target.value)} className="p-2 border rounded" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">First name</label>
+                  <input placeholder="First name" value={form.firstName} onChange={e => update('firstName', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
                 </div>
-                <input placeholder="Email" value={form.email} onChange={e => update('email', e.target.value)} className="p-2 border rounded" />
-                <input placeholder="New password (leave blank to keep)" type="password" value={form.password} onChange={e => update('password', e.target.value)} className="p-2 border rounded" />
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Last name</label>
+                  <input placeholder="Last name" value={form.lastName} onChange={e => update('lastName', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-600 mb-1">Email</label>
+                  <input placeholder="Email" value={form.email} onChange={e => update('email', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-600 mb-1">New password <span className="text-xs text-gray-400">(leave blank to keep)</span></label>
+                  <input placeholder="New password (leave blank to keep)" type="password" value={form.password} onChange={e => update('password', e.target.value)} className="w-full p-3 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-primary-500" />
+                </div>
               </div>
             )}
           </div>
 
-          <div className="p-4 flex justify-end space-x-3">
-            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-primary-600 text-white rounded-lg">{loading ? 'Saving...' : 'Save'}</button>
+          <div className="p-4 bg-gray-50 flex justify-end space-x-3">
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">{loading ? 'Saving...' : 'Save'}</button>
           </div>
         </form>
       </div>

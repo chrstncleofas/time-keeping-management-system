@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { Calendar, Clock, TrendingUp, Download } from 'lucide-react';
+import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
+import DtrPreview from '@/components/shared/DtrPreview';
 import { toast } from '@/lib/toast';
 
 interface AttendanceRecord {
@@ -27,7 +29,13 @@ export default function EmployeeAttendancePage() {
   const { user, token } = useAuthStore();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDtrModalOpen, setDtrModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [cutoff, setCutoff] = useState<'1-15' | '16-end'>(() => {
+    const today = new Date();
+    const isCurrentMonth = selectedMonth.getFullYear() === today.getFullYear() && selectedMonth.getMonth() === today.getMonth();
+    return isCurrentMonth && today.getDate() > 15 ? '16-end' : '1-15';
+  });
 
   useEffect(() => {
     fetchAttendance();
@@ -36,8 +44,13 @@ export default function EmployeeAttendancePage() {
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const startDate = startOfMonth(selectedMonth).toISOString();
-      const endDate = endOfMonth(selectedMonth).toISOString();
+      // determine cut-off range for API query
+      const year = selectedMonth.getFullYear();
+      const month = selectedMonth.getMonth();
+      const startDateObj = cutoff === '1-15' ? new Date(year, month, 1) : new Date(year, month, 16);
+      const endDateObj = cutoff === '1-15' ? new Date(year, month, 15) : endOfMonth(selectedMonth);
+      const startDate = startDateObj.toISOString();
+      const endDate = endDateObj.toISOString();
 
       const response = await fetch(
         `/api/attendance?userId=${user?._id}&startDate=${startDate}&endDate=${endDate}`,
@@ -105,14 +118,14 @@ export default function EmployeeAttendancePage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Attendance</h1>
           <p className="text-gray-600 mt-1">Track your attendance records</p>
+            <button
+              onClick={() => setDtrModalOpen(true)}
+              className="mt-4 flex items-center space-x-2 px-3 py-2 bg-primary-600 text-white rounded-md shadow-sm hover:bg-primary-700 focus:outline-none"
+            >
+              <Download className="w-4 h-4 mt" />
+              <span className="text-sm font-medium">Download DTR</span>
+            </button>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-        >
-          <Download className="w-5 h-5" />
-          <span>Export</span>
-        </button>
       </div>
 
       {/* Stats */}
@@ -155,18 +168,67 @@ export default function EmployeeAttendancePage() {
         </div>
       </div>
 
-      {/* Month Filter */}
-      <div className="bg-white p-6 rounded-xl shadow-sm">
-        <div className="flex items-center space-x-4">
-          <label className="text-sm font-medium text-gray-700">Select Month:</label>
-          <input
-            type="month"
-            value={format(selectedMonth, 'yyyy-MM')}
-            onChange={(e) => setSelectedMonth(new Date(e.target.value))}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
+      {/* Month/Cutoff now in modal to avoid duplicate preview UI */}
+
+      {/* Inline preview removed — use modal preview instead */}
+
+      {/* DTR Modal */}
+      {isDtrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDtrModalOpen(false)} aria-hidden />
+          <div className="relative w-full max-w-3xl max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+            <div className="flex items-start justify-between mb-2 gap-3">
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold">Preview DTR</h3>
+                <p className="text-xs sm:text-sm text-gray-500">{format(selectedMonth, 'MMMM yyyy')} — {cutoff === '1-15' ? '1 - 15' : '16 - end'}</p>
+              </div>
+              <button onClick={() => setDtrModalOpen(false)} className="text-gray-500 hover:text-gray-700">Close</button>
+            </div>
+
+            <div className="mb-3 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Month</label>
+                <input
+                  type="month"
+                  value={format(selectedMonth, 'yyyy-MM')}
+                  onChange={(e) => setSelectedMonth(new Date(e.target.value))}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Cut-off</label>
+                <select
+                  value={cutoff}
+                  onChange={(e) => setCutoff(e.target.value as '1-15' | '16-end')}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="1-15">1 - 15</option>
+                  <option value="16-end">16 - end</option>
+                </select>
+              </div>
+              <div className="sm:col-span-1 flex justify-end">
+                <button onClick={() => setDtrModalOpen(false)} className="px-2 py-1 rounded-md bg-gray-100 mr-2 text-sm">Cancel</button>
+                <DtrDownloadButton
+                  employeeName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim()}
+                  employeeId={user?._id}
+                  attendanceRecords={attendanceRecords}
+                  periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
+                  periodEnd={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 15) : endOfMonth(selectedMonth)}
+                  filename={`DTR-${format(selectedMonth, 'yyyy-MM')}-${cutoff}`}
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <DtrPreview
+                attendanceRecords={attendanceRecords}
+                periodStart={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1) : new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 16)}
+                periodEnd={cutoff === '1-15' ? new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 15) : endOfMonth(selectedMonth)}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Attendance Records */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">

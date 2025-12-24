@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/lib/toast';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 
 interface UserProfile {
   _id: string;
@@ -42,6 +43,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { user, token, isHydrated } = useAuthStore();
   const router = useRouter();
+  const { settings } = useSystemSettings();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -431,14 +433,16 @@ export default function ProfilePage() {
               </h3>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Leave Credits Remaining
-              </label>
-              <div className="px-4 py-2 border border-gray-300 rounded-lg bg-primary-50 text-primary-700 font-semibold">
-                {profile.leaveCredits} days
+            {(settings?.enableLeaveCreditsManagement ?? true) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Leave Credits Remaining
+                </label>
+                <div className="px-4 py-2 border border-gray-300 rounded-lg bg-primary-50 text-primary-700 font-semibold">
+                  {profile.leaveCredits} days
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

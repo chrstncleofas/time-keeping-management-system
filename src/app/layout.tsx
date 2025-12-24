@@ -52,6 +52,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="theme-color" content={vars['--primary-color']} />
+      </head>
       <body className={inter.className}>
         {/* Inject server-rendered CSS variables to preserve brand on first paint */}
         <style dangerouslySetInnerHTML={{ __html: `:root { ${cssVarsString} }` }} />

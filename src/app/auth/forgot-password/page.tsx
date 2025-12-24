@@ -11,7 +11,6 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [resetUrl, setResetUrl] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +30,6 @@ export default function ForgotPasswordPage() {
       if (data.success) {
         setSent(true);
         toast.success(data.message);
-        
-        // Show reset URL in development
-        if (data.resetUrl) {
-          setResetUrl(data.resetUrl);
-        }
       } else {
         toast.error(data.error || 'Failed to send reset link');
       }
@@ -124,19 +118,7 @@ export default function ForgotPasswordPage() {
                 We've sent a password reset link to <strong>{email}</strong>
               </p>
 
-              {resetUrl && (
-                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm font-medium text-yellow-800 mb-2">
-                    Development Mode - Reset Link:
-                  </p>
-                  <a
-                    href={resetUrl}
-                    className="text-sm text-blue-600 hover:underline break-all"
-                  >
-                    {resetUrl}
-                  </a>
-                </div>
-              )}
+              {/* Reset URL intentionally hidden in UI for production-like behavior */}
 
               <p className="text-sm text-gray-500 mb-6">
                 Didn't receive the email? Check your spam folder or try again.
@@ -147,7 +129,6 @@ export default function ForgotPasswordPage() {
                   onClick={() => {
                     setSent(false);
                     setEmail('');
-                    setResetUrl('');
                   }}
                   className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
                 >

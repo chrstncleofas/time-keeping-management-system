@@ -137,154 +137,180 @@ export const TimeKeepingCard: React.FC = () => {
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
-        {/* Current Time Display */}
-        <div className="text-center mb-8">
-          <div className="text-5xl lg:text-6xl font-bold text-gray-900 mb-2">
-            {formatTime(currentTime)}
-          </div>
-          <div className="text-lg text-gray-600">
-            {currentTime.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </div>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Left: Clock, date, schedule, and actions (spans 2 cols on md+) */}
+          <div className="md:col-span-2">
+            {/* Current Time Display */}
+            <div className="text-center mb-6">
+              <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-1">
+                {formatTime(currentTime)}
+              </div>
+              <div className="text-sm md:text-lg text-gray-600">
+                {currentTime.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+            </div>
 
-        {/* Schedule Info */}
-        {schedule && (
-          <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <p className="text-sm font-medium text-blue-900 mb-3">Today's Schedule</p>
-            {schedule.lunchStart && schedule.lunchEnd ? (
-              // Split shift with lunch break
-              <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2 text-blue-700">
-                  <span className="font-semibold">{formatTime12Hour(schedule.timeIn)}</span>
-                  <span>-</span>
-                  <span className="font-semibold">{formatTime12Hour(schedule.lunchStart)}</span>
-                  <span className="text-xs text-blue-600">(Morning)</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-orange-600">
-                  <span className="text-xs">🍽️ Lunch Break:</span>
-                  <span className="font-medium">{formatTime12Hour(schedule.lunchStart)}</span>
-                  <span>-</span>
-                  <span className="font-medium">{formatTime12Hour(schedule.lunchEnd)}</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-blue-700">
-                  <span className="font-semibold">{formatTime12Hour(schedule.lunchEnd)}</span>
-                  <span>-</span>
-                  <span className="font-semibold">{formatTime12Hour(schedule.timeOut)}</span>
-                  <span className="text-xs text-blue-600">(Afternoon)</span>
-                </div>
-              </div>
-            ) : (
-              // Regular shift without explicit lunch break
-              <div className="flex items-center justify-center gap-4 text-blue-700">
-                <span className="font-semibold">{formatTime12Hour(schedule.timeIn)}</span>
-                <span>-</span>
-                <span className="font-semibold">{formatTime12Hour(schedule.timeOut)}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Status Display */}
-        {todayStatus && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {hasTimedIn && (
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-green-900">Time In</span>
-                </div>
-                <p className="text-2xl font-bold text-green-700">
-                  {formatTime(todayStatus.timeIn.timestamp)}
-                </p>
-                {todayStatus.isLate && (
-                  <p className="text-sm text-red-600 mt-1">Late</p>
-                )}
-              </div>
-            )}
-
-            {hasTimedOut && (
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-blue-900">Time Out</span>
-                </div>
-                <p className="text-2xl font-bold text-blue-700">
-                  {formatTime(todayStatus.timeOut.timestamp)}
-                </p>
-                {todayStatus.isEarlyOut && (
-                  <p className="text-sm text-yellow-600 mt-1">Early Out</p>
-                )}
-              </div>
-            )}
-            
-            {/* Worked Hours Summary - Only show after time out */}
-            {hasTimedIn && hasTimedOut && todayStatus.workedHours !== undefined && (
-              <div className="col-span-1 md:col-span-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-900 mb-1">Total Work Duration</p>
-                    <p className="text-3xl font-bold text-purple-700">
-                      {todayStatus.totalHours?.toFixed(2)} hrs
-                    </p>
+            {/* Schedule Info */}
+            {schedule && (
+              <div className="bg-blue-50 rounded-lg p-3 md:p-4 mb-4">
+                <p className="text-sm font-medium text-blue-900 mb-2">Today's Schedule</p>
+                {schedule.lunchStart && schedule.lunchEnd ? (
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center justify-center gap-2 text-blue-700">
+                      <span className="font-semibold">{formatTime12Hour(schedule.timeIn)}</span>
+                      <span>-</span>
+                      <span className="font-semibold">{formatTime12Hour(schedule.lunchStart)}</span>
+                      <span className="text-xs text-blue-600">(Morning)</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-orange-600">
+                      <span className="text-xs">🍽️ Lunch Break:</span>
+                      <span className="font-medium">{formatTime12Hour(schedule.lunchStart)}</span>
+                      <span>-</span>
+                      <span className="font-medium">{formatTime12Hour(schedule.lunchEnd)}</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-blue-700">
+                      <span className="font-semibold">{formatTime12Hour(schedule.lunchEnd)}</span>
+                      <span>-</span>
+                      <span className="font-semibold">{formatTime12Hour(schedule.timeOut)}</span>
+                      <span className="text-xs text-blue-600">(Afternoon)</span>
+                    </div>
                   </div>
-                  {todayStatus.lunchBreakMinutes > 0 && (
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-purple-900 mb-1">Lunch Break</p>
-                      <p className="text-2xl font-bold text-purple-600">
-                        -{todayStatus.lunchBreakMinutes} mins
-                      </p>
+                ) : (
+                  <div className="flex items-center justify-center gap-3 text-blue-700 text-sm">
+                    <span className="font-semibold">{formatTime12Hour(schedule.timeIn)}</span>
+                    <span>-</span>
+                    <span className="font-semibold">{formatTime12Hour(schedule.timeOut)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Status Display (worked hours etc.) */}
+            {todayStatus && (
+              <div className="mb-4">
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Worked Hours Summary - Only show after time out */}
+                  {hasTimedIn && hasTimedOut && todayStatus.workedHours !== undefined && (
+                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 md:p-4 border border-purple-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-purple-900 mb-1">Total Work Duration</p>
+                          <p className="text-2xl md:text-3xl font-bold text-purple-700">
+                            {todayStatus.totalHours?.toFixed(2)} hrs
+                          </p>
+                        </div>
+                        {todayStatus.lunchBreakMinutes > 0 && (
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-purple-900 mb-1">Lunch Break</p>
+                            <p className="text-xl font-bold text-purple-600">
+                              -{todayStatus.lunchBreakMinutes} mins
+                            </p>
+                          </div>
+                        )}
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-indigo-900 mb-1">Worked Hours</p>
+                          <p className="text-2xl md:text-3xl font-bold text-indigo-700">
+                            {todayStatus.workedHours?.toFixed(2)} hrs
+                          </p>
+                        </div>
+                      </div>
+                      {todayStatus.lunchBreakMinutes > 0 && (
+                        <p className="text-xs text-purple-600 mt-2">
+                          * DOLE compliant: Automatic lunch break deduction applied
+                        </p>
+                      )}
                     </div>
                   )}
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-indigo-900 mb-1">Worked Hours</p>
-                    <p className="text-3xl font-bold text-indigo-700">
-                      {todayStatus.workedHours?.toFixed(2)} hrs
-                    </p>
-                  </div>
                 </div>
-                {todayStatus.lunchBreakMinutes > 0 && (
-                  <p className="text-xs text-purple-600 mt-2">
-                    * DOLE compliant: Automatic lunch break deduction applied
-                  </p>
-                )}
               </div>
             )}
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                onClick={() => handleOpenCamera('time-in')}
+                disabled={!canTimeIn || loading}
+                className={`py-3 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
+                  canTimeIn && !loading
+                    ? 'bg-green-600 hover:bg-green-700 active:scale-95'
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
+              >
+                <Camera className="w-5 h-5" />
+                {loading && clockType === 'time-in' ? 'Processing...' : 'Clock In'}
+              </button>
+
+              <button
+                onClick={() => handleOpenCamera('time-out')}
+                disabled={!canTimeOut || loading}
+                className={`py-3 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
+                  canTimeOut && !loading
+                    ? 'bg-blue-600 hover:bg-blue-700 active:scale-95'
+                    : 'bg-gray-300 cursor-not-allowed'
+                }`}
+              >
+                <Camera className="w-5 h-5" />
+                {loading && clockType === 'time-out' ? 'Processing...' : 'Clock Out'}
+              </button>
+            </div>
           </div>
-        )}
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button
-            onClick={() => handleOpenCamera('time-in')}
-            disabled={!canTimeIn || loading}
-            className={`py-4 px-6 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
-              canTimeIn && !loading
-                ? 'bg-green-600 hover:bg-green-700 active:scale-95'
-                : 'bg-gray-300 cursor-not-allowed'
-            }`}
-          >
-            <Camera className="w-5 h-5" />
-            {loading && clockType === 'time-in' ? 'Processing...' : 'Clock In'}
-          </button>
+          {/* Right: Compact Time In / Time Out cards */}
+          <div className="md:col-span-1 flex flex-col gap-3">
+            {/* Time In Card */}
+            <div className="bg-white border rounded-lg p-3 flex items-center gap-3">
+              <div className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                {hasTimedIn ? (
+                  <img
+                    src={
+                      todayStatus.timeIn?.photo || todayStatus.timeIn?.image || todayStatus.timeIn?.capture || todayStatus.timeIn?.photoBase64 || ''
+                    }
+                    alt="Time In"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <Camera className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-gray-500">Time In</div>
+                <div className="text-sm font-semibold text-gray-800">{hasTimedIn ? formatTime(todayStatus.timeIn.timestamp) : '-'}</div>
+                <div className="text-xs text-gray-500">{hasTimedIn ? new Date(todayStatus.timeIn.timestamp).toLocaleDateString() : ''}</div>
+              </div>
+            </div>
 
-          <button
-            onClick={() => handleOpenCamera('time-out')}
-            disabled={!canTimeOut || loading}
-            className={`py-4 px-6 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2 ${
-              canTimeOut && !loading
-                ? 'bg-blue-600 hover:bg-blue-700 active:scale-95'
-                : 'bg-gray-300 cursor-not-allowed'
-            }`}
-          >
-            <Camera className="w-5 h-5" />
-            {loading && clockType === 'time-out' ? 'Processing...' : 'Clock Out'}
-          </button>
+            {/* Time Out Card */}
+            <div className="bg-white border rounded-lg p-3 flex items-center gap-3">
+              <div className="flex-shrink-0 w-14 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                {hasTimedOut ? (
+                  <img
+                    src={
+                      todayStatus.timeOut?.photo || todayStatus.timeOut?.image || todayStatus.timeOut?.capture || todayStatus.timeOut?.photoBase64 || ''
+                    }
+                    alt="Time Out"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <Camera className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-gray-500">Time Out</div>
+                <div className="text-sm font-semibold text-gray-800">{hasTimedOut ? formatTime(todayStatus.timeOut.timestamp) : '-'}</div>
+                <div className="text-xs text-gray-500">{hasTimedOut ? new Date(todayStatus.timeOut.timestamp).toLocaleDateString() : ''}</div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        
 
         {!schedule && (
           <div className="mt-4 p-4 bg-yellow-50 rounded-lg">

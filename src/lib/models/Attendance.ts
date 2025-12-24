@@ -34,6 +34,14 @@ const AttendanceSchema = new Schema<IAttendance, AttendanceModel>(
       type: Number,
       default: 0,
     },
+    overtimeMinutes: {
+      type: Number,
+      default: 0,
+    },
+    overtimeHours: {
+      type: Number,
+      default: 0,
+    },
     isLate: {
       type: Boolean,
       default: false,

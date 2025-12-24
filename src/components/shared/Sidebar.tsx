@@ -42,7 +42,7 @@ const adminMenuItems: MenuItem[] = [
   { icon: Calendar, label: 'Attendance', href: '/admin/attendance' },
   { icon: Clock, label: 'Schedules', href: '/admin/schedules' },
   { icon: ClockIcon, label: 'Time Adjustments', href: '/admin/time-adjustments', requiresSetting: 'enableVerbalAgreements' },
-  { icon: ShieldCheck, label: 'Audit Logs', href: '/admin/audit-logs' },
+  { icon: ShieldCheck, label: 'Logs', href: '/admin/audit-logs' },
 ];
 
 const superAdminMenuItems: MenuItem[] = [
@@ -231,17 +231,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       {/* Mobile backdrop */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/70 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 lg:hidden transition-opacity duration-200"
           onClick={toggleMobileMenu}
+          aria-hidden
+          style={{ zIndex: 40 }}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-60 w-64 shadow-2xl transform transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 w-64 shadow-2xl transform transition-transform duration-300 lg:translate-x-0 ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
+          zIndex: 100,
           backgroundColor: systemSettings?.sidebarBg || safeGet('--sidebar-bg', '#0f1724'),
           color: systemSettings?.sidebarText || safeGet('--sidebar-text', '#e6eef8'),
           borderRight: '1px solid rgba(255,255,255,0.04)'
@@ -255,8 +258,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
-        className="fixed top-4 left-4 z-30 lg:hidden p-2 rounded-lg shadow-lg"
-        style={{ backgroundColor: systemSettings?.sidebarBg || safeGet('--sidebar-bg', '#0f1724'), border: '1px solid rgba(255,255,255,0.04)', color: systemSettings?.sidebarText || safeGet('--sidebar-text', '#e6eef8') }}
+        className="fixed left-4 lg:hidden p-2 rounded-lg shadow-lg"
+        style={{
+          top: `calc(var(--safe-area-inset-top, 0px) + 12px)`,
+          zIndex: 110,
+          backgroundColor: systemSettings?.sidebarBg || safeGet('--sidebar-bg', '#0f1724'),
+          border: '1px solid rgba(255,255,255,0.04)',
+          color: systemSettings?.sidebarText || safeGet('--sidebar-text', '#e6eef8'),
+        }}
+        aria-label="Open menu"
       >
         <Menu className="w-6 h-6" />
       </button>

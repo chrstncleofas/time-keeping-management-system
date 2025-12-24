@@ -3,8 +3,8 @@ import User from '@/lib/models/User';
 import { authMiddleware } from '@/lib/middleware/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import * as service from '@/server/services/scheduleService';
-import { createAuditLog, getClientIP, getUserAgent, AUDIT_ACTIONS } from '@/lib/utils/auditLog';
 import * as notificationService from '@/server/services/notificationService';
+import { createAuditLog, getClientIP, getUserAgent, AUDIT_ACTIONS } from '@/lib/utils/auditLog';
 
 export async function getSchedules(request: NextRequest, user: any) {
   try {
@@ -47,7 +47,7 @@ export async function createSchedule(request: NextRequest, user: any) {
     // notify the target user about the created schedule
     try {
       if (targetUser) {
-        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: user.userId, title: `Your schedule was created`, description: `A schedule was created for you: ${timeIn} - ${timeOut}` , category: 'SCHEDULE', metadata: { scheduleId: schedule._id } });
+        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: user.userId, title: `Your schedule was created`, description: `A schedule was created for you: ${timeIn} - ${timeOut}` , category: 'SCHEDULE', metadata: { schedule } });
       }
     } catch (err) {
       console.error('notify schedule create error', err);
@@ -73,7 +73,7 @@ export async function updateSchedule(request: NextRequest, user: any) {
     // notify the target user about the updated schedule
     try {
       if (targetUser) {
-        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: user.userId, title: `Your schedule was updated`, description: `Your schedule was updated: ${JSON.stringify(updates)}` , category: 'SCHEDULE', metadata: { scheduleId } });
+        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: user.userId, title: `Your schedule was updated`, description: `Your schedule was updated`, category: 'SCHEDULE', metadata: { schedule } });
       }
     } catch (err) {
       console.error('notify schedule update error', err);
@@ -98,7 +98,7 @@ export async function deleteSchedule(request: NextRequest, user: any) {
     // notify the target user about the deleted schedule
     try {
       if (targetUser) {
-        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: user.userId, title: `Your schedule was removed`, description: `Your schedule (${schedule.timeIn} - ${schedule.timeOut}) has been removed` , category: 'SCHEDULE', metadata: { scheduleId } });
+        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: user.userId, title: `Your schedule was removed`, description: `Your schedule (${schedule.timeIn} - ${schedule.timeOut}) has been removed` , category: 'SCHEDULE', metadata: { schedule } });
       }
     } catch (err) {
       console.error('notify schedule delete error', err);
@@ -125,6 +125,14 @@ export async function patchScheduleById(request: NextRequest, { params }: { para
     const admin = await User.findById(auth.user._id);
     const targetUser = await User.findById(schedule.userId);
     await createAuditLog({ userId: auth.user._id, userName: admin ? `${admin.firstName} ${admin.lastName}` : 'Admin', userRole: auth.user.role, action: AUDIT_ACTIONS.SCHEDULE_UPDATED, category: 'SCHEDULE', description: `Updated schedule for ${targetUser ? `${targetUser.firstName} ${targetUser.lastName}` : 'User'}`, ipAddress: getClientIP(request), userAgent: getUserAgent(request), metadata: { scheduleId: id, updates }, status: 'SUCCESS' });
+    // notify the target user about the updated schedule (single-id handler)
+    try {
+      if (targetUser) {
+        await notificationService.createNotification({ recipientId: targetUser._id.toString(), actorId: auth.user._id, title: `Your schedule was updated`, description: `Your schedule was updated`, category: 'SCHEDULE', metadata: { schedule } });
+      }
+    } catch (err) {
+      console.error('notify schedule update (patch) error', err);
+    }
     return NextResponse.json({ success: true, schedule });
   } catch (err: any) {
     logger.error('patchScheduleById error', { message: err.message, stack: err.stack, route: '/api/schedule/[id]' });
