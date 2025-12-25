@@ -1,10 +1,10 @@
+import User from '@/lib/models/User';
+import logger from '@/lib/logger';
+import { formatDateTime } from '@/lib/utils/helpers';
 import { NextRequest, NextResponse } from 'next/server';
 import * as service from '@/server/services/timeEntryService';
-import logger from '@/lib/logger';
-import { requireAuth } from '@/lib/middleware/auth';
-import { createAuditLog, getClientIP, getUserAgent, AUDIT_ACTIONS } from '@/lib/utils/auditLog';
-import User from '@/lib/models/User';
 import * as notificationService from '@/server/services/notificationService';
+import { createAuditLog, getClientIP, getUserAgent, AUDIT_ACTIONS } from '@/lib/utils/auditLog';
 
 export async function createEntry(request: NextRequest, user: any) {
   try {
@@ -23,7 +23,7 @@ export async function createEntry(request: NextRequest, user: any) {
       const adminIds = admins.map(a => a._id.toString());
       const employeeName = `${result.userDetails.firstName} ${result.userDetails.lastName}`;
       const title = `${employeeName} ${type === 'time-in' ? 'clocked in' : 'clocked out'}`;
-      const description = `${employeeName} has ${type === 'time-in' ? 'clocked in' : 'clocked out'} at ${new Date().toLocaleString()}`;
+      const description = `${employeeName} has ${type === 'time-in' ? 'clocked in' : 'clocked out'} at ${formatDateTime(new Date())}`;
       await notificationService.createNotificationForUsers(adminIds, { actorId: user.userId, title, description, category: 'ATTENDANCE', metadata: { timeEntryId: result.timeEntry._id, attendanceId: result.attendance._id } });
     } catch (err) {
       // swallow notification errors

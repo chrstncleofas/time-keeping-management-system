@@ -4,8 +4,8 @@ import { toast } from '@/lib/toast';
 import { apiClient } from '@/lib/api/client';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useState, useEffect } from 'react';
+import { Camera, AlertTriangle } from 'lucide-react';
 import { WebcamCapture } from '@/components/shared/WebcamCapture';
-import { Camera, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatTime, getCurrentDayOfWeek, getPhilippineTime } from '@/lib/utils/helpers';
 
 // Helper function to convert 24-hour format to 12-hour format with AM/PM
@@ -60,7 +60,7 @@ export const TimeKeepingCard: React.FC = () => {
 
   const fetchTodayStatus = async () => {
     try {
-      const today = new Date();
+      const today = getPhilippineTime();
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
@@ -164,7 +164,7 @@ export const TimeKeepingCard: React.FC = () => {
                 {formatTime(currentTime)}
               </div>
               <div className="text-sm md:text-lg text-gray-600">
-                {currentTime.toLocaleDateString('en-US', { 
+                {currentTime.toLocaleDateString('en-PH', {
                   weekday: 'long', 
                   year: 'numeric', 
                   month: 'long', 
@@ -322,8 +322,27 @@ export const TimeKeepingCard: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-xs text-gray-500">{entry.type === 'time-in' ? 'Clock In' : 'Clock Out'}</div>
-                      <div className="text-sm font-semibold text-gray-800">{entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString() : '-'}</div>
-                      <div className="text-xs text-gray-500">{entry.timestamp ? new Date(entry.timestamp).toLocaleDateString() : ''}</div>
+                      <div className="text-sm font-semibold text-gray-800">
+                        {entry.timestamp
+                          ? new Date(entry.timestamp).toLocaleTimeString('en-PH', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              hour12: true,
+                              timeZone: 'Asia/Manila',
+                            })
+                          : '-'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {entry.timestamp
+                          ? new Date(entry.timestamp).toLocaleDateString('en-PH', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              timeZone: 'Asia/Manila',
+                            })
+                          : ''}
+                      </div>
                     </div>
                   </div>
                 ));

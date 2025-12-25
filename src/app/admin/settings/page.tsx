@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from '@/lib/toast';
+import { formatDateTime } from '@/lib/utils/helpers';
 import { apiClient } from '@/lib/api/client';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -264,7 +265,7 @@ export default function SystemSettingsPage() {
             </div>
           </div>
 
-          <div className="text-sm text-gray-500">Last updated: {new Date(settings.lastUpdatedAt).toLocaleString()}</div>
+          <div className="text-sm text-gray-500">Last updated: {settings.lastUpdatedAt ? formatDateTime(settings.lastUpdatedAt) : '—'}</div>
         </div>
 
         {/* Right: Branding / color quick-edit panel */}

@@ -14,6 +14,7 @@ import {
 } from 'date-fns';
 
 import { toast } from '@/lib/toast';
+import { getCurrentDayOfWeek } from '@/lib/utils/helpers';
 import { ISchedule, DayOfWeek } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useEffect, useState } from 'react';
@@ -107,8 +108,7 @@ export default function EmployeeSchedulePage() {
 
   const getTodaySchedule = () => {
     if (!schedule) return null;
-    
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as DayOfWeek;
+    const today = getCurrentDayOfWeek() as DayOfWeek;
     return schedule.days.includes(today);
   };
 

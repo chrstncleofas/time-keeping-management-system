@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/utils/email';
+import { formatDateTime } from '@/lib/utils/helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function POST(request: NextRequest) {
     if (!to) return NextResponse.json({ success: false, error: 'No recipient provided' }, { status: 400 });
 
     const subject = 'TKMS Test Email';
-    const html = `<p>This is a test email from TKMS at ${new Date().toLocaleString()}.</p>`;
+    const html = `<p>This is a test email from TKMS at ${formatDateTime(new Date())}.</p>`;
 
     const result = await sendEmail({ to, subject, html });
     if (!result.success) return NextResponse.json(result, { status: 500 });
