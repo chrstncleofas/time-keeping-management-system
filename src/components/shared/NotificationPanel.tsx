@@ -60,7 +60,7 @@ export function NotificationPanel() {
           />
           
           {/* Panel */}
-          <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
+          <div className="fixed right-0 top-0 h-full w-full sm:w-96 max-w-[95vw] bg-white shadow-2xl z-50 flex flex-col animate-slide-in">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
@@ -94,9 +94,9 @@ export function NotificationPanel() {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {notifications.map((notification: Notification) => (
+                  {notifications.map((notification: Notification, _idx: number) => (
                     <div
-                      key={notification.id}
+                      key={notification.id ?? `notification-${_idx}`}
                       className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                         !notification.read ? 'bg-blue-50/50' : ''
                       }`}

@@ -24,7 +24,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div className="bg-white rounded-lg shadow-xl max-w-[95vw] w-full max-h-[92vh] overflow-auto">
         <div className="p-4 border-b flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>

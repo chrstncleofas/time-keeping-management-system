@@ -100,7 +100,7 @@ export const UserModal: React.FC<Props> = ({ open, mode, initial = {}, onClose, 
     <>
       <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <form onSubmit={handleSubmit} onClick={e => e.stopPropagation()} className="bg-white rounded-xl shadow-2xl max-w-2xl w-full">
+        <form onSubmit={handleSubmit} onClick={e => e.stopPropagation()} className="bg-white rounded-xl shadow-2xl max-w-[95vw] w-full max-h-[92vh] overflow-auto">
           <div className="p-5 border-b flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-gray-900">{mode === 'create' ? 'Create User' : 'Change Credentials'}</h3>

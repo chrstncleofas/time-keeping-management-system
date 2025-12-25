@@ -64,44 +64,76 @@ export default function UsersPage() {
       </div>
 
         <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="flex items-center justify-between mb-4">
-          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search users..." className="p-2 border rounded w-64" />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search users..." className="p-2 border rounded w-full sm:w-64" />
           <div className="text-sm text-gray-500">{users.length} users</div>
         </div>
         {loading ? (
           <div>Loading...</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-gray-500">
-                <th className="p-2">Name</th>
-                <th className="p-2">Email</th>
-                <th className="p-2">Role</th>
-                <th className="p-2">Active</th>
-                <th className="p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Desktop/table view */}
+            <div className="hidden sm:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500">
+                    <th className="p-2">Name</th>
+                    <th className="p-2">Email</th>
+                    <th className="p-2">Role</th>
+                    <th className="p-2">Active</th>
+                    <th className="p-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map(u => (
+                    <tr key={u._id} className="border-t">
+                      <td className="p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">{u.firstName?.[0]}{u.lastName?.[0]}</div>
+                        <div>
+                          <div className="font-medium">{u.firstName} {u.lastName}</div>
+                          <div className="text-xs text-gray-500">{u.employeeId || ''}</div>
+                        </div>
+                      </td>
+                      <td className="p-3">{u.email}</td>
+                      <td className="p-3">{u.role}</td>
+                      <td className="p-3">{u.isActive ? <span className="text-green-600 font-medium">Active</span> : <span className="text-red-600">Disabled</span>}</td>
+                      <td className="p-3">
+                        <button onClick={() => handleOpenEdit(u)} className="mr-2 px-3 py-1 bg-yellow-100 rounded hover:bg-yellow-200">Change / Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile/card view */}
+            <div className="sm:hidden space-y-3">
               {paginatedUsers.map(u => (
-                <tr key={u._id} className="border-t">
-                  <td className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">{u.firstName?.[0]}{u.lastName?.[0]}</div>
-                    <div>
-                      <div className="font-medium">{u.firstName} {u.lastName}</div>
-                      <div className="text-xs text-gray-500">{u.employeeId || ''}</div>
+                <div key={u._id} className="border rounded-lg p-3 bg-white shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-lg">{u.firstName?.[0]}{u.lastName?.[0]}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{u.firstName} {u.lastName}</div>
+                          <div className="text-xs text-gray-500">{u.employeeId || ''}</div>
+                        </div>
+                        <div className="text-xs text-gray-500">{u.role}</div>
+                      </div>
+                      <div className="mt-2 text-sm text-gray-700">{u.email}</div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <div>{u.isActive ? <span className="text-green-600 font-medium">Active</span> : <span className="text-red-600">Disabled</span>}</div>
+                        <div>
+                          <button onClick={() => handleOpenEdit(u)} className="px-3 py-1 bg-yellow-100 rounded hover:bg-yellow-200">Change</button>
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td className="p-3">{u.email}</td>
-                  <td className="p-3">{u.role}</td>
-                  <td className="p-3">{u.isActive ? <span className="text-green-600 font-medium">Active</span> : <span className="text-red-600">Disabled</span>}</td>
-                  <td className="p-3">
-                    <button onClick={() => handleOpenEdit(u)} className="mr-2 px-3 py-1 bg-yellow-100 rounded hover:bg-yellow-200">Change / Edit</button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-          )}
+            </div>
+          </>
+        )}
 
           <div className="mt-6">
             <Pagination

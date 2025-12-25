@@ -31,7 +31,7 @@ export const AttendanceCaptureModal: React.FC<Props> = ({ open, onClose, dateLab
     return (
       <div className="flex flex-col items-center gap-2">
         {entry.photoUrl ? (
-          <img src={entry.photoUrl} alt="capture" className="max-h-64 object-contain rounded-md border" />
+          <img src={entry.photoUrl} alt="capture" className="w-full max-h-[50vh] md:max-h-64 object-contain rounded-md border" />
         ) : (
           <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-sm text-gray-500">No image</div>
         )}
@@ -47,7 +47,7 @@ export const AttendanceCaptureModal: React.FC<Props> = ({ open, onClose, dateLab
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-[95vw] max-h-[92vh] overflow-auto">
         <div className="p-4 border-b flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold">View Capture</h3>

@@ -14,12 +14,11 @@ import {
 } from 'date-fns';
 
 import { toast } from '@/lib/toast';
-import { getCurrentDayOfWeek } from '@/lib/utils/helpers';
 import { ISchedule, DayOfWeek } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useEffect, useState } from 'react';
+import { getCurrentDayOfWeek } from '@/lib/utils/helpers';
 import { Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
 
 const DAYS_FULL: { [key in DayOfWeek]: string } = {
   monday: 'Monday',
@@ -299,15 +298,6 @@ export default function EmployeeSchedulePage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Schedule</h1>
           <p className="text-gray-600 mt-1">Calendar view of your work schedule and attendance</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <DtrDownloadButton
-            employeeName={`${user?.firstName || ''} ${user?.lastName || ''}`}
-            employeeId={user?._id}
-            attendanceRecords={attendanceRecords}
-            periodStart={new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)}
-            periodEnd={new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)}
-          />
         </div>
       </div>
 

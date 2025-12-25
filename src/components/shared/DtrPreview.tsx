@@ -97,7 +97,7 @@ export default function DtrPreview({ attendanceRecords, periodStart, periodEnd, 
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[480px] sm:min-w-[640px] text-sm">
+        <table className="w-full min-w-[320px] sm:min-w-[640px] text-sm">
           <thead>
             <tr className="text-left text-xs text-gray-600 uppercase tracking-wide">
               <th className="px-2 py-1 sm:px-3 sm:py-2">Days</th>

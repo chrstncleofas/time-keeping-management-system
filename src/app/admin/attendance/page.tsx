@@ -1,13 +1,14 @@
 'use client';
 
 import { toast } from '@/lib/toast';
+import { ISchedule } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useEffect, useState } from 'react';
 import DtrPreview from '@/components/shared/DtrPreview';
 import { Pagination } from '@/components/shared/Pagination';
-import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
-import { ISchedule } from '@/types';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
+import { toPhilippineTime, formatDate, formatTime } from '@/lib/utils/helpers';
 import AttendanceCaptureModal from '@/components/shared/AttendanceCaptureModal';
 import { Calendar, Clock, Download, Filter, Search, UserCheck, UserX, Eye } from 'lucide-react';
 
@@ -187,16 +188,16 @@ export default function AdminAttendancePage() {
 
   const exportToCSV = () => {
     const headers = ['Date', 'Employee ID', 'Name', 'Time In', 'Time Out', 'Duration', 'Break', 'Worked', 'OT', 'Status', 'Late'];
-    const rows = filteredRecords.map(record => {
+      const rows = filteredRecords.map(record => {
       const lunch = record.lunchBreakMinutes ?? 0;
       const empId = record.userId?.employeeId ?? '';
       const name = record.userId ? `${record.userId.firstName ?? ''} ${record.userId.lastName ?? ''}`.trim() : 'Unknown';
       return [
-        format(parseISO(record.date), 'yyyy-MM-dd'),
+        format(toPhilippineTime(record.date), 'yyyy-MM-dd'),
         empId,
         name,
-        record.timeIn ? format(parseISO(record.timeIn.timestamp), 'HH:mm') : '-',
-        record.timeOut ? format(parseISO(record.timeOut.timestamp), 'HH:mm') : '-',
+        record.timeIn ? format(toPhilippineTime(record.timeIn.timestamp), 'HH:mm') : '-',
+        record.timeOut ? format(toPhilippineTime(record.timeOut.timestamp), 'HH:mm') : '-',
         record.totalHours ? record.totalHours.toFixed(2) : '-',
         lunch > 0 ? `-${lunch}min` : '-',
         record.workedHours ? record.workedHours.toFixed(2) : '-',
@@ -350,7 +351,7 @@ export default function AdminAttendancePage() {
       {isDtrModalOpen && selectedEmployee !== 'all' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDtrModalOpen(false)} aria-hidden />
-          <div className="relative w-full max-w-3xl max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+          <div className="relative w-full max-w-[95vw] max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
             <div className="flex items-start justify-between mb-2 gap-3">
               <div className="flex-1">
                 <h3 className="text-base sm:text-lg font-semibold">Preview DTR - {employees.find(e => e._id === selectedEmployee)?.firstName} {employees.find(e => e._id === selectedEmployee)?.lastName}</h3>
@@ -409,7 +410,7 @@ export default function AdminAttendancePage() {
       {showSelectorModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowSelectorModal(false)} aria-hidden />
-          <div className="relative w-full max-w-3xl max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+          <div className="relative w-full max-w-[95vw] max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
             <div className="flex items-start justify-between mb-2 gap-3">
               <div className="flex-1">
                 <h3 className="text-base sm:text-lg font-semibold">Preview & Download DTR (Select Employee)</h3>
@@ -576,7 +577,7 @@ export default function AdminAttendancePage() {
                 paginatedRecords.map((record) => (
                   <tr key={record._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {format(parseISO(record.date), 'MMM dd, yyyy')}
+                      {formatDate(record.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -585,10 +586,10 @@ export default function AdminAttendancePage() {
                       <div className="text-sm text-gray-500">{record.userId?.employeeId ?? '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {record.timeIn ? format(parseISO(record.timeIn.timestamp), 'hh:mm a') : '-'}
+                      {record.timeIn ? formatTime(record.timeIn.timestamp) : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {record.timeOut ? format(parseISO(record.timeOut.timestamp), 'hh:mm a') : '-'}
+                      {record.timeOut ? formatTime(record.timeOut.timestamp) : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {record.totalHours ? `${record.totalHours.toFixed(2)} hrs` : '-'}
@@ -640,7 +641,7 @@ export default function AdminAttendancePage() {
         <AttendanceCaptureModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
-          dateLabel={selectedRecord ? format(parseISO(selectedRecord.date), 'PP') : undefined}
+          dateLabel={selectedRecord ? formatDate(selectedRecord.date) : undefined}
           userName={selectedRecord ? `${selectedRecord.userId?.firstName ?? ''} ${selectedRecord.userId?.lastName ?? ''}`.trim() : undefined}
           timeIn={selectedRecord?.timeIn as any}
           timeOut={selectedRecord?.timeOut as any}
