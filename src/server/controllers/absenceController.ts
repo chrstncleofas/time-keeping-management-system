@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import * as service from '@/server/services/absenceService';
 import logger from '@/lib/logger';
 import { authMiddleware } from '@/lib/middleware/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import * as service from '@/server/services/absenceService';
 
 export async function getAbsences(request: NextRequest) {
   try {

@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useAuthStore } from '@/stores/authStore';
-import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, Plus, Edit, Trash2, Users, Save, X } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { ISchedule, DayOfWeek } from '@/types';
+import { useAuthStore } from '@/stores/authStore';
+import React, { useEffect, useState } from 'react';
 import { Pagination } from '@/components/shared/Pagination';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import { Calendar, Clock, Plus, Edit, Trash2, Users, Save, X } from 'lucide-react';
 
 interface UserInfo {
   _id: string;
@@ -238,7 +237,6 @@ export default function AdminSchedulesPage() {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedSchedules = schedules.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-6">

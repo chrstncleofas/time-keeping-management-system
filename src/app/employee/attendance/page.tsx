@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { toast } from '@/lib/toast';
+import { apiClient } from '@/lib/api/client';
 import { useAuthStore } from '@/stores/authStore';
-import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { format, endOfMonth, parseISO } from 'date-fns';
+import DtrPreview from '@/components/shared/DtrPreview';
 import { Calendar, Clock, TrendingUp, Download } from 'lucide-react';
 import DtrDownloadButton from '@/components/shared/DtrDownloadButton';
-import DtrPreview from '@/components/shared/DtrPreview';
-import { apiClient } from '@/lib/api/client';
-import { toast } from '@/lib/toast';
 
 interface AttendanceRecord {
   _id: string;
@@ -81,7 +81,6 @@ export default function EmployeeAttendancePage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching attendance:', error);
       toast.error('Failed to load attendance records');
     } finally {
       setLoading(false);
@@ -103,27 +102,6 @@ export default function EmployeeAttendancePage() {
       holiday: 'bg-blue-100 text-blue-800',
     };
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800';
-  };
-
-  const exportToCSV = () => {
-    const headers = ['Date', 'Time In', 'Time Out', 'Total Hours', 'Status', 'Late'];
-    const rows = attendanceRecords.map(record => [
-      format(parseISO(record.date), 'yyyy-MM-dd'),
-      record.timeIn ? format(parseISO(record.timeIn.timestamp), 'HH:mm') : '-',
-      record.timeOut ? format(parseISO(record.timeOut.timestamp), 'HH:mm') : '-',
-      (record.totalHours ?? 0).toFixed(2),
-      record.status,
-      record.isLate ? 'Yes' : 'No',
-    ]);
-
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `my-attendance-${format(selectedMonth, 'yyyy-MM')}.csv`;
-    a.click();
-    toast.success('Attendance exported successfully');
   };
 
   return (

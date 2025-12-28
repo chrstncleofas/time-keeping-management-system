@@ -47,7 +47,7 @@ export const AttendanceCaptureModal: React.FC<Props> = ({ open, onClose, dateLab
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-[95vw] max-h-[92vh] overflow-auto">
+      <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-xl max-h-[92vh] overflow-auto">
         <div className="p-4 border-b flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold">View Capture</h3>

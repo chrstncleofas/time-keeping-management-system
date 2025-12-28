@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import { 
+  useNotifications,
+  useMarkAllNotifications
+} from '@/lib/hooks/useNotifications';
+
 import { Bell, X } from 'lucide-react';
-import { useNotifications, useMarkAllNotifications } from '@/lib/hooks/useNotifications';
+import React, { useState } from 'react';
 
 interface Notification {
   id: string;

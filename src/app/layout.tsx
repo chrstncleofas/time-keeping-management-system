@@ -1,7 +1,7 @@
 import '@/styles/globals.css';
+import Providers from './Providers';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
-import Providers from './Providers';
 import connectDB from '@/lib/db/mongodb';
 import SystemSettings from '@/lib/models/SystemSettings';
 

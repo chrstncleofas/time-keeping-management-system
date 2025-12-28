@@ -339,13 +339,13 @@ export default function EmployeesPage() {
       {/* Add Employee Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-3xl w-full my-8">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-xl w-full my-8 max-w-md sm:max-w-3xl max-h-[90vh] overflow-auto">
+            <div className="p-4 sm:p-6 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-gray-900">Add New Employee</h2>
               <p className="text-gray-600 mt-1">Fill in the employee details below</p>
             </div>
             
-            <form onSubmit={handleAddEmployee} className="p-6">
+            <form onSubmit={handleAddEmployee} className="p-4 sm:p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

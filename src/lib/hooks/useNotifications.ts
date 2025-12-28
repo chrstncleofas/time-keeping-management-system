@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 async function fetchNotifications(token?: string | null) {
   const res = await fetch('/api/notifications', {

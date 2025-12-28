@@ -1,12 +1,12 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api/client';
+import { useAuthStore } from '@/stores/authStore';
 import React, { useEffect, useState } from 'react';
 import { StatCard } from '@/components/shared/StatCard';
-import { TimeKeepingCard } from '@/components/employee/TimeKeepingCard';
 import { Clock, Calendar, TrendingUp } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
-import { apiClient } from '@/lib/api/client';
-import { useRouter } from 'next/navigation';
+import { TimeKeepingCard } from '@/components/employee/TimeKeepingCard';
 
 export default function EmployeeDashboard() {
   const { user, isAuthenticated, isHydrated } = useAuthStore();
@@ -79,7 +79,6 @@ export default function EmployeeDashboard() {
           Track your time and view your attendance
         </p>
       </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
@@ -104,10 +103,7 @@ export default function EmployeeDashboard() {
           color={stats.daysLate > 0 ? 'red' : 'green'}
         />
       </div>
-
-      {/* Time Keeping Card */}
       <TimeKeepingCard />
     </div>
   );
 }
-

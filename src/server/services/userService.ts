@@ -1,5 +1,5 @@
-import connectDB from '@/lib/db/mongodb';
 import User from '@/lib/models/User';
+import connectDB from '@/lib/db/mongodb';
 import SystemSettings from '@/lib/models/SystemSettings';
 import { generateEmployeeId } from '@/lib/utils/employee';
 

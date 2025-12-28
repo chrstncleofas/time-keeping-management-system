@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/tkms';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ibaytechproject4229_db_user:GVEbYOAlzIJVKEZs@cluster0.dcmdo1a.mongodb.net/tkms?retryWrites=true&w=majority';
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');

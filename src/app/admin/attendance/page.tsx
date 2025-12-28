@@ -228,10 +228,11 @@ export default function AdminAttendancePage() {
         <div className="flex items-center space-x-2">
           <button
             onClick={exportToCSV}
-            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            aria-label="Export CSV"
+            className="flex items-center space-x-2 px-3 py-1.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 whitespace-nowrap"
           >
             <Download className="w-5 h-5" />
-            <span>Export CSV</span>
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
           <button
             onClick={() => setShowSelectorModal(true)}
@@ -240,15 +241,6 @@ export default function AdminAttendancePage() {
             <Download className="w-4 h-4" />
             <span className="text-sm">Preview DTR (Select Employee)</span>
           </button>
-          {selectedEmployee !== 'all' ? (
-            <button
-              onClick={() => setDtrModalOpen(true)}
-              className="flex items-center space-x-2 px-3 py-2 bg-primary-600 text-white rounded-md shadow-sm hover:bg-primary-700 focus:outline-none"
-            >
-              <Download className="w-4 h-4" />
-              <span className="text-sm font-medium">Preview & Download DTR</span>
-            </button>
-          ) : null}
         </div>
       </div>
 
@@ -349,9 +341,9 @@ export default function AdminAttendancePage() {
 
       {/* Admin DTR Modal */}
       {isDtrModalOpen && selectedEmployee !== 'all' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setDtrModalOpen(false)} aria-hidden />
-          <div className="relative w-full max-w-[95vw] max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+          <div className="relative w-full max-w-3xl mx-auto max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
             <div className="flex items-start justify-between mb-2 gap-3">
               <div className="flex-1">
                 <h3 className="text-base sm:text-lg font-semibold">Preview DTR - {employees.find(e => e._id === selectedEmployee)?.firstName} {employees.find(e => e._id === selectedEmployee)?.lastName}</h3>
@@ -408,9 +400,9 @@ export default function AdminAttendancePage() {
 
       {/* Selector Modal for Admin/Super-admin to pick employee + month/cutoff */}
       {showSelectorModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowSelectorModal(false)} aria-hidden />
-          <div className="relative w-full max-w-[95vw] max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
+          <div className="relative w-full max-w-3xl mx-auto max-h-[85vh] bg-white rounded-lg shadow-lg p-3 sm:p-4 overflow-auto">
             <div className="flex items-start justify-between mb-2 gap-3">
               <div className="flex-1">
                 <h3 className="text-base sm:text-lg font-semibold">Preview & Download DTR (Select Employee)</h3>

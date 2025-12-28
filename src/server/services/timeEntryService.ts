@@ -1,32 +1,36 @@
 import { 
-  base64ToBuffer,
-  getCurrentDayOfWeek,
   isLate,
   isEarlyOut,
+  base64ToBuffer,
+  getPhilippineTime, 
+  getCurrentDayOfWeek,
+  calculateDetailedHours,
   calculateLatenessMinutes,
   calculateEarlyOutMinutes,
-  calculateDetailedHours,
-  getPhilippineTime 
 } from '@/lib/utils/helpers';
 
-import connectDB from '@/lib/db/mongodb';
-import TimeEntry from '@/lib/models/TimeEntry';
-import Attendance from '@/lib/models/Attendance';
-import Schedule from '@/lib/models/Schedule';
 import User from '@/lib/models/User';
+import connectDB from '@/lib/db/mongodb';
+import Schedule from '@/lib/models/Schedule';
+import TimeEntry from '@/lib/models/TimeEntry';
 import { startOfDay, endOfDay } from 'date-fns';
+import Attendance from '@/lib/models/Attendance';
 import { uploadToS3, isS3Configured } from '@/lib/utils/s3';
 
-export async function createTimeEntry({ userId, type, photoBase64, location }: { userId: string; type: string; photoBase64: string; location?: any }) {
-  await connectDB();
+export async function createTimeEntry({ 
+  userId, type, photoBase64, location 
+}: { userId: string; 
+     type: string;
+     photoBase64: string; 
+     location?: any 
+}) {
 
+  await connectDB();
   const userDetails = await User.findById(userId);
   if (!userDetails) throw new Error('User not found');
-
   const today = getPhilippineTime();
   const startOfToday = startOfDay(today);
   const endOfToday = endOfDay(today);
-
   const currentDay = getCurrentDayOfWeek();
   // Pick the most recently updated active schedule for the current day to
   // avoid using an older active schedule when admins edit schedules.
@@ -43,13 +47,19 @@ export async function createTimeEntry({ userId, type, photoBase64, location }: {
   const filename = `${userDetails.employeeId || userId}-${dateStr}.jpg`;
   const s3Key = `attendance-photos/${filename}`;
 
-  const uploadResult = await uploadToS3({ buffer, key: s3Key, contentType: 'image/jpeg', metadata: { userId, employeeId: userDetails.employeeId || '', lastName: userDetails.lastName, type, uploadedAt: new Date().toISOString() } });
+  const uploadResult = await uploadToS3({ 
+    buffer, key: s3Key, contentType: 'image/jpeg', metadata: { 
+      userId,
+      employeeId: userDetails.employeeId || '', 
+      lastName: userDetails.lastName, 
+      type, 
+      uploadedAt: new Date().toISOString() 
+    } 
+  });
+
   if (!uploadResult.success) throw new Error('Failed to upload photo');
-
   const photoUrl = uploadResult.url!;
-
   const timeEntry = await TimeEntry.create({ userId, type, timestamp: getPhilippineTime(), photoUrl, location, status: 'approved' });
-
   let attendance = await Attendance.findOne({ userId, date: { $gte: startOfToday, $lte: endOfToday } });
   if (!attendance) {
     attendance = await Attendance.create({ userId, date: startOfToday, status: 'present' });
@@ -80,13 +90,15 @@ export async function createTimeEntry({ userId, type, photoBase64, location }: {
     attendance.isEarlyOut = isEarlyOut(timeEntry.timestamp, schedule.timeOut);
     attendance.earlyOutMinutes = calculateEarlyOutMinutes(timeEntry.timestamp, schedule.timeOut);
   }
-
   await attendance.save();
-
   return { timeEntry, attendance, userDetails, schedule };
 }
 
-export async function findTimeEntries({ userId, startDate, endDate }: { userId: string; startDate?: string | null; endDate?: string | null }) {
+export async function findTimeEntries({ userId, startDate, endDate }: { 
+  userId: string; 
+  startDate?: string | null;
+  endDate?: string | null 
+}) {
   await connectDB();
   const query: any = { userId };
   if (startDate && endDate) {
@@ -98,20 +110,16 @@ export async function findTimeEntries({ userId, startDate, endDate }: { userId: 
 
 export async function updateTimeEntryStatus(id: string, status: 'approved' | 'rejected') {
   await connectDB();
-
   const entry = await TimeEntry.findById(id);
   if (!entry) throw new Error('Time entry not found');
-
   entry.status = status;
   await entry.save();
-
   // Also update any Attendance document that has this time entry embedded
   // Attendance stores timeIn/timeOut as plain objects, so find and update
   const AttendanceModel = (await import('@/lib/models/Attendance')).default;
   const attendance = await AttendanceModel.findOne({
     $or: [{ 'timeIn._id': id }, { 'timeOut._id': id }],
   });
-
   if (attendance) {
     if (attendance.timeIn && (attendance.timeIn as any)._id?.toString() === id.toString()) {
       (attendance.timeIn as any).status = status;
@@ -121,6 +129,5 @@ export async function updateTimeEntryStatus(id: string, status: 'approved' | 're
     }
     await attendance.save();
   }
-
   return entry;
 }

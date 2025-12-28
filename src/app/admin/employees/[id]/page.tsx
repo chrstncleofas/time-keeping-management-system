@@ -80,6 +80,46 @@ export default function EditEmployeePage() {
     fetchEmployee();
   }, [isHydrated, user]);
 
+  // Client-side mount for admin DTR button
+  React.useEffect(() => {
+    // lazy-load the button so we don't bloat SSR
+    (async () => {
+      try {
+        const el = document.getElementById('admin-dtr-button');
+        if (!el) return;
+        // Only show DTR download button for super-admin users
+        if (user?.role !== 'super-admin') return;
+        // Avoid double-mounting in React StrictMode (dev) or if effect runs multiple times
+        if ((el as HTMLElement).dataset.dtrMounted === '1') return;
+        const mod = await import('@/components/shared/DtrDownloadButton');
+        // fetch attendance for employee for current month
+        const start = new Date();
+        const startDate = new Date(start.getFullYear(), start.getMonth(), 1).toISOString();
+        const endDate = new Date(start.getFullYear(), start.getMonth() + 1, 0).toISOString();
+        const resp = await fetch(`/api/attendance?userId=${employee?._id || ''}&startDate=${startDate}&endDate=${endDate}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await resp.json();
+        const container = document.createElement('div');
+        el.appendChild(container);
+        (el as HTMLElement).dataset.dtrMounted = '1';
+        // @ts-ignore
+        createRoot(container).render(
+          // @ts-ignore
+          React.createElement(mod.default, {
+            employeeName: employee ? `${employee.firstName} ${employee.lastName}` : '',
+            employeeId: employee?._id,
+            attendanceRecords: data.attendances || [],
+            periodStart: new Date(start.getFullYear(), start.getMonth(), 1),
+            periodEnd: new Date(start.getFullYear(), start.getMonth() + 1, 0),
+          })
+        );
+      } catch (e) {
+        // ignore lazy mount errors
+      }
+    })();
+  }, [employee, token]);
+
   const fetchEmployee = async () => {
     try {
       setLoading(true);
@@ -213,40 +253,6 @@ export default function EditEmployeePage() {
     return null;
   }
 
-  // Client-side mount for admin DTR button
-  React.useEffect(() => {
-    // lazy-load the button so we don't bloat SSR
-    (async () => {
-      try {
-        const el = document.getElementById('admin-dtr-button');
-        if (!el) return;
-        const mod = await import('@/components/shared/DtrDownloadButton');
-        // fetch attendance for employee for current month
-        const start = new Date();
-        const startDate = new Date(start.getFullYear(), start.getMonth(), 1).toISOString();
-        const endDate = new Date(start.getFullYear(), start.getMonth() + 1, 0).toISOString();
-        const resp = await fetch(`/api/attendance?userId=${employee._id}&startDate=${startDate}&endDate=${endDate}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await resp.json();
-        const container = document.createElement('div');
-        el.appendChild(container);
-        // @ts-ignore
-        createRoot(container).render(
-          // @ts-ignore
-          React.createElement(mod.default, {
-            employeeName: `${employee.firstName} ${employee.lastName}`,
-            employeeId: employee._id,
-            attendanceRecords: data.attendances || [],
-            periodStart: new Date(start.getFullYear(), start.getMonth(), 1),
-            periodEnd: new Date(start.getFullYear(), start.getMonth() + 1, 0),
-          })
-        );
-      } catch (e) {
-        // ignore lazy mount errors
-      }
-    })();
-  }, [employee, token]);
 
   return (
     <div className="max-w-5xl mx-auto p-6">

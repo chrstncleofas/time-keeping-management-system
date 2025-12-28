@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  Search,
-  Filter,
   User,
   Clock,
+  Search,
+  Filter,
   XCircle,
   Download,
   Calendar,
@@ -191,10 +191,11 @@ export default function AuditLogsPage() {
           </div>
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            aria-label="Export CSV"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors whitespace-nowrap"
           >
             <Download className="w-4 h-4" />
-            Export CSV
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
         </div>
       </div>

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { toast } from '@/lib/toast';
-import { formatDateTime } from '@/lib/utils/helpers';
+import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { useAuthStore } from '@/stores/authStore';
+import { formatDateTime } from '@/lib/utils/helpers';
 
 interface SystemSettings {
   enableLeaveCreditsManagement: boolean;
@@ -32,6 +32,13 @@ interface SystemSettings {
   authBackdropBg?: string;
   cardBg?: string;
   employeeIdPrefix?: string;
+}
+
+interface ToggleSwitchProps {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: () => void;
 }
 
 export default function SystemSettingsPage() {
@@ -318,14 +325,12 @@ export default function SystemSettingsPage() {
   );
 }
 
-interface ToggleSwitchProps {
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: () => void;
-}
-
-function ToggleSwitch({ label, description, checked, onChange }: ToggleSwitchProps) {
+function ToggleSwitch({ 
+  label,
+  description,
+  checked,
+  onChange 
+}: ToggleSwitchProps) {
   return (
     <div className="flex items-start justify-between">
       <div className="flex-1">

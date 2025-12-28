@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/authStore';
-import { useSystemSettings } from '@/hooks/useSystemSettings';
-import { apiClient } from '@/lib/api/client';
-import { toast } from '@/lib/toast';
 import { 
+  Clock,
   FileText, 
-  Clock, 
-  CheckCircle, 
   XCircle,
-  Filter
+  CheckCircle, 
 } from 'lucide-react';
+
 import { ILeave } from '@/types';
 import { format } from 'date-fns';
+import { toast } from '@/lib/toast';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/authStore';
+import React, { useEffect, useState } from 'react';
+import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { Pagination } from '@/components/shared/Pagination';
 
 export default function AdminLeavesPage() {

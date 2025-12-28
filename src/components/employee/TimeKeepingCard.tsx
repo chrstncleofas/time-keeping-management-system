@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api/client';
 import { useAuthStore } from '@/stores/authStore';
 import React, { useState, useEffect } from 'react';
 import { Camera, AlertTriangle } from 'lucide-react';
-import { WebcamCapture } from '@/components/shared/WebcamCapture';
+import WebcamCapture from '@/components/shared/WebcamCapture';
 import { formatTime, getCurrentDayOfWeek, getPhilippineTime } from '@/lib/utils/helpers';
 
 // Helper function to convert 24-hour format to 12-hour format with AM/PM
@@ -363,10 +363,7 @@ export const TimeKeepingCard: React.FC = () => {
       </div>
 
       {showCamera && (
-        <WebcamCapture
-          onCapture={handlePhotoCapture}
-          onClose={() => setShowCamera(false)}
-        />
+        <WebcamCapture onConfirm={handlePhotoCapture} onClose={() => setShowCamera(false)} />
       )}
 
       {/* Clock Out Confirmation Modal */}

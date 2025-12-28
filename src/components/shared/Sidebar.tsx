@@ -3,32 +3,32 @@
 import { 
   X,
   Users, 
-  Calendar, 
-  FileText,
   Clock,
   User,
   LogOut,
   Menu,
-  LucideIcon,
-  LayoutDashboard,
-  ShieldCheck,
+  Calendar, 
   Settings,
+  FileText,
   ClockIcon,
+  LucideIcon,
+  ShieldCheck,
+  LayoutDashboard,
 } from 'lucide-react';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from '@/lib/toast';
-import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '@/stores/authStore';
-import { useRouter, usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
+import { useAuthStore } from '@/stores/authStore';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface MenuItem {
   icon: LucideIcon;
   label: string;
   href: string;
-  requiresSetting?: string; // Field name in system settings to check
+  requiresSetting?: string;
 }
 
 interface SidebarProps {
@@ -147,12 +147,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
             className="drop-shadow-2xl"
           />
         </div>
-        <button
-          onClick={toggleMobileMenu}
-          className="lg:hidden text-gray-400 hover:text-gray-200"
-        >
-          <X className="w-6 h-6" />
-        </button>
       </div>
 
       {/* User Info */}
@@ -258,7 +252,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
-        className="fixed left-4 lg:hidden p-2 rounded-lg shadow-lg"
+        className="fixed left-4 lg:hidden p-1.5 rounded-md"
         style={{
           top: `calc(var(--safe-area-inset-top, 0px) + 12px)`,
           zIndex: 110,
@@ -266,9 +260,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
           border: '1px solid rgba(255,255,255,0.04)',
           color: systemSettings?.sidebarText || safeGet('--sidebar-text', '#e6eef8'),
         }}
-        aria-label="Open menu"
+        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+        title={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
       >
-        <Menu className="w-6 h-6" />
+        {isMobileMenuOpen ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Menu className="w-5 h-5" />
+        )}
       </button>
     </>
   );

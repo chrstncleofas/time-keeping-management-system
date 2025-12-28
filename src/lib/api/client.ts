@@ -1,7 +1,15 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const _envApi = process.env.NEXT_PUBLIC_API_URL;
+let API_URL: string;
+if (!_envApi) {
+  API_URL = '/api';
+} else {
+  const trimmed = _envApi.replace(/\/+$/, '');
+  if (trimmed.endsWith('/api')) API_URL = trimmed;
+  else API_URL = `${trimmed}/api`;
+}
 
 class ApiClient {
   private client: AxiosInstance;

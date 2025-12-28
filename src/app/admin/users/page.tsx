@@ -53,13 +53,13 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold">User Management</h1>
           <p className="text-gray-600">Create and manage system users and admins</p>
         </div>
-        <div>
-          <button onClick={handleCreateUser} className="px-4 py-2 bg-primary-600 text-white rounded-lg">Create User</button>
+        <div className="w-full sm:w-auto">
+          <button onClick={handleCreateUser} className="w-full sm:w-auto px-3 py-2 text-sm bg-primary-600 text-white rounded-md hover:bg-primary-700">Create User</button>
         </div>
       </div>
 

@@ -90,7 +90,7 @@ export default function DtrPreview({ attendanceRecords, periodStart, periodEnd, 
   }
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-100 p-2 sm:p-4 overflow-x-auto">
+    <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow border border-gray-100 p-2 sm:p-4 overflow-x-auto">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-base sm:text-lg font-semibold text-gray-800">DTR Preview</h3>
         <div className="text-xs sm:text-sm text-gray-500">{format(start, 'MMM d')} — {format(end, 'MMM d, yyyy')}</div>

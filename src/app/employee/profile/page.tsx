@@ -220,17 +220,17 @@ export default function ProfilePage() {
       {/* Profile Card */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
         {/* Header with Photo */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-8 text-white">
-          <div className="flex items-center gap-6">
-            <div className="relative">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-4 sm:p-8 text-white">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+            <div className="relative flex-shrink-0">
               {profile.photoUrl ? (
                 <img
                   src={profile.photoUrl}
                   alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-white shadow-lg"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center text-primary-700 font-bold text-3xl">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white flex items-center justify-center text-primary-700 font-bold text-2xl sm:text-3xl">
                   {profile.firstName[0]}{profile.lastName[0]}
                 </div>
               )}
@@ -245,7 +245,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingPhoto}
-                className="absolute bottom-0 right-0 bg-white text-primary-600 rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="absolute bottom-0 right-0 bg-white text-primary-600 rounded-full p-1.5 sm:p-2 shadow-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 {uploadingPhoto ? (
                   <div className="animate-spin w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full"></div>
@@ -254,30 +254,32 @@ export default function ProfilePage() {
                 )}
               </button>
             </div>
-            <div className="flex-1">
+
+            <div className="flex-1 text-center sm:text-left">
               <h2 className="text-2xl font-bold">
                 {profile.firstName} {profile.middleName ? `${profile.middleName[0]}. ` : ''}{profile.lastName}
               </h2>
               <p className="text-primary-100 mt-1">{profile.employeeId}</p>
-              <div className="mt-2 inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-sm">
+              <div className="mt-2 inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-sm justify-center sm:justify-start">
                 <Shield className="w-4 h-4" />
                 {profile.role === 'admin' ? 'Administrator' : 'Employee'}
               </div>
             </div>
+
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-primary-600 rounded-lg hover:bg-gray-50 transition-colors"
+                className="mt-2 sm:mt-0 w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-1.5 bg-white text-primary-600 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
               >
                 <Edit className="w-4 h-4" />
-                Edit Profile
+                <span className="hidden sm:inline">Edit Profile</span>
               </button>
             )}
           </div>
         </div>
 
         {/* Profile Information */}
-        <form onSubmit={handleSubmit} className="p-8">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="md:col-span-2">
