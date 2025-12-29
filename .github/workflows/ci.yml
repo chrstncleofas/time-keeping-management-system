@@ -19,25 +19,28 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
+            set -e
+
             cd ${{ secrets.APP_DIR }}
 
-            echo "Pull latest code"
-            git pull origin main
+            echo "📥 Pull latest code"
+            git pull origin master
 
-            echo "Install deps"
+            echo "📦 Install deps"
             pnpm install
 
-            echo "Type check"
+            echo "🧪 Type check"
             pnpm run type-check
 
-            echo "Build app"
+            echo "🏗 Build app"
             pnpm build
 
-            echo "Restart PM2"
+            echo "♻ Restart PM2"
             pm2 restart ecosystem.config.js
 
-            echo "Restart NGINX"
+            echo "🔁 Restart NGINX"
             sudo systemctl restart nginx
 
-            echo "Deploy finished"
+            echo "✅ Deploy finished"
