@@ -1,0 +1,43 @@
+name: Backend API CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: SSH Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ secrets.APP_DIR }}
+
+            echo "Pull latest code"
+            git pull origin main
+
+            echo "Install deps"
+            pnpm install
+
+            echo "Type check"
+            pnpm run type-check
+
+            echo "Build app"
+            pnpm build
+
+            echo "Restart PM2"
+            pm2 restart ecosystem.config.js
+
+            echo "Restart NGINX"
+            sudo systemctl restart nginx
+
+            echo "Deploy finished"

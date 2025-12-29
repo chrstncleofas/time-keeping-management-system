@@ -1,8 +1,8 @@
-import connectDB from '@/lib/db/mongodb';
-import Notification from '@/lib/models/Notification';
 import User from '@/lib/models/User';
+import connectDB from '@/lib/db/mongodb';
 import { sendEmail } from '@/lib/utils/email';
 import { emailTemplates } from '@/lib/utils/email';
+import Notification from '@/lib/models/Notification';
 
 export async function createNotification(payload: {
   recipientId: string;

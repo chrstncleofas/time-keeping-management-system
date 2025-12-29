@@ -1,6 +1,5 @@
 import connectDB from '@/lib/db/mongodb';
 import Schedule from '@/lib/models/Schedule';
-import User from '@/lib/models/User';
 
 export async function findSchedules({ userId }: { userId?: string } = {}) {
   await connectDB();

@@ -1,6 +1,6 @@
-import connectDB from '@/lib/db/mongodb';
-import User from '@/lib/models/User';
 import crypto from 'crypto';
+import User from '@/lib/models/User';
+import connectDB from '@/lib/db/mongodb';
 import { sendEmail } from '@/lib/utils/email';
 
 export async function findUserByEmail(email: string) {
@@ -33,7 +33,7 @@ export async function requestPasswordReset(email: string) {
   user.resetPasswordExpiry = expiry;
   await user.save();
 
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
   const resetUrl = `${baseUrl.replace(/\/$/, '')}/auth/reset-password?token=${token}`;
 
   const html = `
