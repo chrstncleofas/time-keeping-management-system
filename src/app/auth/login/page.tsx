@@ -171,7 +171,7 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="rounded-2xl shadow-2xl p-8" style={{ backgroundColor: settings?.authCardBg || settings?.cardBg || 'var(--auth-card-bg)', border: useLightBg ? '1px solid rgba(15,23,36,0.06)' : '1px solid rgba(255,255,255,0.04)' }}>
-          <h2 className="text-2xl font-bold mb-6" style={{ color: headingColor }}>Welcome Back Tol</h2>
+          <h2 className="text-2xl font-bold mb-6" style={{ color: headingColor }}>Welcome Back</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Input */}
