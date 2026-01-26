@@ -1,2 +1,5 @@
-import * as controller from '@/server/controllers/authController';
-export const POST = controller.resetPassword as any;
+/**
+ * Backward compatibility alias - re-exports from /api/v1/auth/reset-password
+ * @deprecated Use /api/v1/auth/reset-password instead
+ */
+export { POST } from '../../v1/auth/reset-password/route';

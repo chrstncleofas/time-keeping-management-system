@@ -1,6 +1,5 @@
-import * as controller from '@/server/controllers/auditLogController';
 /**
- * GET /api/audit-logs
- * Get audit logs with filters (Admin only)
+ * Backward compatibility alias - re-exports from /api/v1/audit-logs
+ * @deprecated Use /api/v1/audit-logs instead
  */
-export const GET = controller.getAuditLogs as any;
+export { GET } from '../v1/audit-logs/route';

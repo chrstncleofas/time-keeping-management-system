@@ -1,4 +1,5 @@
-
-import * as controller from '@/server/controllers/authController';
-
-export const POST = controller.register as any;
+/**
+ * Backward compatibility alias - re-exports from /api/v1/auth/register
+ * @deprecated Use /api/v1/auth/register instead
+ */
+export { POST } from '../../v1/auth/register/route';

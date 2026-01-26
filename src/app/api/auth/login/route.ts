@@ -1,3 +1,5 @@
-import * as controller from '@/server/controllers/authController';
-
-export const POST = controller.login as any;
+/**
+ * Backward compatibility alias - re-exports from /api/v1/auth/login
+ * @deprecated Use /api/v1/auth/login instead
+ */
+export { POST } from '../../v1/auth/login/route';

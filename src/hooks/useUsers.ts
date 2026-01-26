@@ -1,11 +1,18 @@
- 'use client';
+'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_PATHS } from '@/lib/api/paths';
+import { IUser, CreateUserDto, UpdateUserDto } from '@/types';
 
-async function fetchUsers(role?: string) {
+interface UsersResponse {
+  success: boolean;
+  users: IUser[];
+}
+
+async function fetchUsers(role?: string): Promise<UsersResponse> {
   const search = new URLSearchParams();
   if (role) search.set('role', role);
-  const path = `/api/users${search.toString() ? `?${search.toString()}` : ''}`;
+  const path = `${API_PATHS.USERS.BASE}${search.toString() ? `?${search.toString()}` : ''}`;
   const res = await fetch(path);
   if (!res.ok) throw new Error('Failed to fetch users');
   return res.json();
@@ -21,13 +28,16 @@ export function useUsers(role?: string) {
 export function useCreateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await fetch('/api/users', {
+    mutationFn: async (payload: CreateUserDto) => {
+      const res = await fetch(API_PATHS.USERS.BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Failed to create user');
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create user');
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
@@ -37,14 +47,17 @@ export function useCreateUser() {
 export function useUpdateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, updates }: any) => {
-      const path = `/api/users?id=${encodeURIComponent(id)}`;
+    mutationFn: async ({ id, updates }: { id: string; updates: UpdateUserDto }) => {
+      const path = `${API_PATHS.USERS.BASE}?id=${encodeURIComponent(id)}`;
       const res = await fetch(path, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-      if (!res.ok) throw new Error('Failed to update user');
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update user');
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
@@ -55,9 +68,12 @@ export function useDeleteUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const path = `/api/users?id=${encodeURIComponent(id)}`;
+      const path = `${API_PATHS.USERS.BASE}?id=${encodeURIComponent(id)}`;
       const res = await fetch(path, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete user');
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to delete user');
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),

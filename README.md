@@ -101,4 +101,3 @@ Private — All rights reserved
 If you want, I can also:
 - Add a short architecture diagram or sequence flow for theming on first paint
 - Generate a `README.dev.md` with developer setup and debugging tips
-

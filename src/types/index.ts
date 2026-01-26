@@ -194,3 +194,127 @@ export interface DashboardStats {
   lateToday: number;
   onLeaveToday: number;
 }
+
+// Additional DTOs for API versioning
+export interface UpdateUserDto {
+  email?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  role?: 'admin' | 'employee';
+  employeeId?: string;
+  position?: string;
+  department?: string;
+  birthday?: Date;
+  gender?: 'male' | 'female' | 'other';
+  mobileNumber?: string;
+  sss?: string;
+  philhealth?: string;
+  pagibig?: string;
+  tin?: string;
+  photoUrl?: string;
+  leaveCredits?: number;
+  isActive?: boolean;
+}
+
+export interface CreateTimeAdjustmentDto {
+  userId: string;
+  attendanceId: string;
+  adjustmentType: 'time-in' | 'time-out' | 'both';
+  originalTimeIn?: Date;
+  originalTimeOut?: Date;
+  adjustedTimeIn?: Date;
+  adjustedTimeOut?: Date;
+  reason: string;
+}
+
+export interface ITimeAdjustment {
+  _id: string;
+  userId: string;
+  attendanceId: string;
+  adjustmentType: 'time-in' | 'time-out' | 'both';
+  originalTimeIn?: Date;
+  originalTimeOut?: Date;
+  adjustedTimeIn?: Date;
+  adjustedTimeOut?: Date;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  approvedBy?: string;
+  approvedAt?: Date;
+  adminNotes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateAbsenceDto {
+  userId: string;
+  date: Date;
+  reason: string;
+  notes?: string;
+}
+
+export interface UpdateSystemSettingsDto {
+  companyName?: string;
+  companyLogo?: string;
+  primaryColor?: string;
+  accentColor?: string;
+  sidebarBg?: string;
+  sidebarText?: string;
+  sidebarActiveBg?: string;
+  sidebarHoverBg?: string;
+  buttonBg?: string;
+  buttonText?: string;
+  gracePeriodMinutes?: number;
+  overtimeThresholdMinutes?: number;
+  autoClockOutEnabled?: boolean;
+  autoClockOutTime?: string;
+}
+
+export interface ISystemSettings {
+  _id: string;
+  companyName: string;
+  companyLogo?: string;
+  logoUrl?: string; // Alternative logo URL
+  primaryColor: string;
+  accentColor: string;
+  sidebarBg: string;
+  sidebarText: string;
+  sidebarActiveBg: string;
+  sidebarHoverBg: string;
+  buttonBg: string;
+  buttonText: string;
+  cardBg?: string;
+  authCardBg?: string;
+  authBackdropBg?: string;
+  footerText?: string;
+  gracePeriodMinutes: number;
+  overtimeThresholdMinutes: number;
+  autoClockOutEnabled: boolean;
+  autoClockOutTime?: string;
+  // Employee ID settings
+  employeeIdPrefix?: string;
+  employeeIdPadding?: number;
+  employeeIdDelimiter?: string;
+  employeeIdUppercase?: boolean;
+  // Feature flags
+  enableLeaveCreditsManagement?: boolean;
+  enableFileLeaveRequest?: boolean;
+  enableVerbalAgreements?: boolean;
+  allowEarlyOut?: boolean;
+  allowHalfDay?: boolean;
+  allowLateIn?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface INotification {
+  _id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  isRead: boolean;
+  link?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

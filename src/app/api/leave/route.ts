@@ -1,4 +1,5 @@
-import * as controller from '@/server/controllers/leaveController';
-
-export const GET = controller.getLeaves as any;
-export const POST = controller.createLeave as any;
+/**
+ * Backward compatibility alias - re-exports from /api/v1/leave
+ * @deprecated Use /api/v1/leave instead
+ */
+export { GET, POST } from '../v1/leave/route';

@@ -1,3 +1,5 @@
-import * as controller from '@/server/controllers/absenceController';
-export const GET = controller.getAbsences as any;
-export const POST = controller.createAbsence as any;
+/**
+ * Backward compatibility alias - re-exports from /api/v1/absence
+ * @deprecated Use /api/v1/absence instead
+ */
+export { GET, POST } from '../v1/absence/route';

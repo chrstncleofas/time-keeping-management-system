@@ -1,34 +1,43 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { API_CONFIG, getVersionedPath } from './config';
 
+// Build base API URL with versioning
 const _envApi = process.env.NEXT_PUBLIC_API_URL;
-let API_URL: string;
+let BASE_API_URL: string;
 if (!_envApi) {
-  API_URL = '/api';
+  BASE_API_URL = '/api';
 } else {
   const trimmed = _envApi.replace(/\/+$/, '');
-  if (trimmed.endsWith('/api')) API_URL = trimmed;
-  else API_URL = `${trimmed}/api`;
+  if (trimmed.endsWith('/api')) BASE_API_URL = trimmed;
+  else BASE_API_URL = `${trimmed}/api`;
 }
+
+// Versioned API URL (e.g., /api/v1)
+const API_URL = `${BASE_API_URL}/${API_CONFIG.CURRENT_VERSION}`;
 
 class ApiClient {
   private client: AxiosInstance;
+  private version: string;
 
-  constructor() {
+  constructor(version: string = API_CONFIG.CURRENT_VERSION) {
+    this.version = version;
     this.client = axios.create({
-      baseURL: API_URL,
+      baseURL: `${BASE_API_URL}/${version}`,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Request interceptor to add auth token
+    // Request interceptor to add auth token and version header
     this.client.interceptors.request.use(
       (config) => {
         const token = useAuthStore.getState().token;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        // Add version header for tracking
+        config.headers['X-API-Version'] = this.version;
         return config;
       },
       (error) => {
@@ -36,13 +45,21 @@ class ApiClient {
       }
     );
 
-    // Response interceptor for error handling
+    // Response interceptor for error handling and deprecation warnings
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Check for deprecation headers
+        const deprecated = response.headers['x-api-deprecated'];
+        const sunset = response.headers['sunset'];
+        if (deprecated === 'true' && sunset) {
+          console.warn(`API ${this.version} is deprecated. Sunset date: ${sunset}`);
+        }
+        return response;
+      },
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           // Token expired or invalid
-          const errorData = error.response?.data as any;
+          const errorData = error.response?.data as { error?: string };
           const errorMessage = errorData?.error || 'Session expired';
           
           // Show toast notification
@@ -61,13 +78,18 @@ class ApiClient {
     );
   }
 
+  // Get current API version
+  getVersion(): string {
+    return this.version;
+  }
+
   // Auth endpoints
   async login(email: string, password: string) {
     const response = await this.client.post('/auth/login', { email, password });
     return response.data;
   }
 
-  async register(data: any) {
+  async register(data: Record<string, unknown>) {
     const response = await this.client.post('/auth/register', data);
     return response.data;
   }
@@ -78,7 +100,7 @@ class ApiClient {
     return response.data;
   }
 
-  async updateUser(userId: string, data: any) {
+  async updateUser(userId: string, data: Record<string, unknown>) {
     const response = await this.client.patch(`/users?id=${userId}`, data);
     return response.data;
   }
@@ -94,18 +116,18 @@ class ApiClient {
     return response.data;
   }
 
-  async createSchedule(data: any) {
+  async createSchedule(data: Record<string, unknown>) {
     const response = await this.client.post('/schedules', data);
     return response.data;
   }
 
-  async updateSchedule(scheduleId: string, data: any) {
+  async updateSchedule(scheduleId: string, data: Record<string, unknown>) {
     const response = await this.client.patch(`/schedules?id=${scheduleId}`, data);
     return response.data;
   }
 
   // Time entry endpoints
-  async clockIn(photoBase64: string, location?: any) {
+  async clockIn(photoBase64: string, location?: Record<string, unknown>) {
     const response = await this.client.post('/time-entries', {
       type: 'time-in',
       photoBase64,
@@ -114,7 +136,7 @@ class ApiClient {
     return response.data;
   }
 
-  async clockOut(photoBase64: string, location?: any) {
+  async clockOut(photoBase64: string, location?: Record<string, unknown>) {
     const response = await this.client.post('/time-entries', {
       type: 'time-out',
       photoBase64,
@@ -150,10 +172,16 @@ class ApiClient {
     return response.data;
   }
 
-  async updateSystemSettings(data: any) {
+  async updateSystemSettings(data: Record<string, unknown>) {
     const response = await this.client.patch('/system-settings', data);
     return response.data;
   }
 }
 
+// Default export for current version (v1)
 export const apiClient = new ApiClient();
+
+// Factory for creating clients for specific versions (future use)
+export function createApiClient(version: string = API_CONFIG.CURRENT_VERSION): ApiClient {
+  return new ApiClient(version);
+}

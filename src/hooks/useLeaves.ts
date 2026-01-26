@@ -1,7 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+'use client';
 
-async function fetchLeaves() {
-  const res = await fetch('/api/leave');
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_PATHS } from '@/lib/api/paths';
+import { ILeave, CreateLeaveDto } from '@/types';
+
+interface LeavesResponse {
+  success: boolean;
+  leaves: ILeave[];
+}
+
+async function fetchLeaves(): Promise<LeavesResponse> {
+  const res = await fetch(API_PATHS.LEAVES.BASE);
   if (!res.ok) throw new Error('Failed to fetch leaves');
   return res.json();
 }
@@ -13,9 +22,16 @@ export function useLeaves() {
 export function useCreateLeave() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await fetch('/api/leave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!res.ok) throw new Error('Failed to create leave');
+    mutationFn: async (payload: CreateLeaveDto) => {
+      const res = await fetch(API_PATHS.LEAVES.BASE, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload) 
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to create leave');
+      }
       return res.json();
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['leaves'] })

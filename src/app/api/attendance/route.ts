@@ -1,4 +1,5 @@
-import { requireAuth } from '@/lib/middleware/auth';
-import * as controller from '@/server/controllers/attendanceController';
-
-export const GET = requireAuth(controller.getAttendances as any);
+/**
+ * Backward compatibility alias - re-exports from /api/v1/attendance
+ * @deprecated Use /api/v1/attendance instead
+ */
+export { GET } from '../v1/attendance/route';

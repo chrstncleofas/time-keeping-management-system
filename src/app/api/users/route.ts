@@ -1,7 +1,5 @@
-import { requireAdmin } from '@/lib/middleware/auth';
-import * as controller from '@/server/controllers/userController';
-
-export const GET = requireAdmin(controller.getUsers as any);
-export const POST = requireAdmin(controller.createUser as any);
-export const PATCH = requireAdmin(controller.updateUser as any);
-export const DELETE = requireAdmin(controller.deleteUser as any);
+/**
+ * Backward compatibility alias - re-exports from /api/v1/users
+ * @deprecated Use /api/v1/users instead
+ */
+export { GET, POST, PATCH, DELETE } from '../v1/users/route';
